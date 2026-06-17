@@ -28,155 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', iniciarSesion);
     }
-
-    // 4. Lógica para Administradores (Organizadores)
-    const adminControls = document.getElementById('admin-controls');
-    if (adminControls && usuarioLogueado) {
-        const usuario = JSON.parse(usuarioLogueado);
-        // Simulamos que cualquier correo que empiece con "admin" es organizador
-        if (usuario.email.toLowerCase().startsWith('admin')) {
-            adminControls.style.display = 'block';
-        }
-    }
-
-    const formAdminNoche = document.getElementById('formAdminNoche');
-    if (formAdminNoche) {
-        formAdminNoche.addEventListener('submit', crearNocheAdmin);
-    }
-
-    const formEditarNoche = document.getElementById('formEditarNoche');
-    if (formEditarNoche) {
-        formEditarNoche.addEventListener('submit', guardarEdicionNoche);
-    }
 });
-
-// Función para abrir modal y cargar datos actuales
-function abrirModalEditarNoche(id_noche, fechaOriginal, hora_inicio, titulo) {
-    document.getElementById('edit_id_noche').value = id_noche;
-    document.getElementById('edit_titulo').value = titulo;
-    // La fecha en el input tipo date requiere formato YYYY-MM-DD
-    // Asumimos que viene formateada o usamos el value directamente de la BD
-    document.getElementById('edit_fecha').value = fechaOriginal.split('T')[0]; 
-    document.getElementById('edit_hora').value = hora_inicio;
-    
-    const modalElement = document.getElementById('modalEditarNoche');
-    const modalInstance = new bootstrap.Modal(modalElement);
-    modalInstance.show();
-}
-
-// Función para manejar el envío del formulario de edición
-async function guardarEdicionNoche(event) {
-    event.preventDefault();
-    
-    const id_noche = document.getElementById('edit_id_noche').value;
-    const data = {
-        titulo: document.getElementById('edit_titulo').value,
-        fecha: document.getElementById('edit_fecha').value,
-        hora_inicio: document.getElementById('edit_hora').value
-    };
-
-    try {
-        const response = await fetch('/api/admin/noches/' + id_noche, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('¡Noche actualizada exitosamente!');
-            
-            const modalElement = document.getElementById('modalEditarNoche');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            modalInstance.hide();
-            
-            // Recargar noches
-            const nochesContainer = document.getElementById('noches-container');
-            if (nochesContainer) {
-                cargarNoches(nochesContainer);
-            }
-        } else {
-            alert('Error: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error editando noche:', error);
-        alert('Error de conexión.');
-    }
-}
-
-// Función para manejar el borrado de una Noche
-async function borrarNocheAdmin(id_noche) {
-    if (!confirm('¿Estás seguro de que deseas borrar esta noche de forma permanente? Se borrarán también los artistas asociados a la misma.')) {
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/admin/noches/' + id_noche, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('Noche borrada correctamente.');
-            // Recargar noches
-            const nochesContainer = document.getElementById('noches-container');
-            if (nochesContainer) {
-                cargarNoches(nochesContainer);
-            }
-        } else {
-            alert('Error: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error borrando noche:', error);
-        alert('Error de conexión al intentar borrar.');
-    }
-}
-
-// Función para manejar el envío del formulario de nueva Noche
-async function crearNocheAdmin(event) {
-    event.preventDefault();
-    
-    const data = {
-        titulo: document.getElementById('admin_titulo').value,
-        fecha: document.getElementById('admin_fecha').value,
-        hora_inicio: document.getElementById('admin_hora').value
-    };
-
-    try {
-        const response = await fetch('/api/admin/noches', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('¡Noche creada exitosamente!');
-            
-            // Cerrar el modal de Bootstrap
-            const modalElement = document.getElementById('modalAdminNoche');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-            modalInstance.hide();
-            
-            // Limpiar formulario
-            document.getElementById('formAdminNoche').reset();
-
-            // Recargar noches
-            const nochesContainer = document.getElementById('noches-container');
-            if (nochesContainer) {
-                cargarNoches(nochesContainer);
-            }
-        } else {
-            alert('Error: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error creando noche:', error);
-        alert('Error de conexión.');
-    }
-}
 
 function actualizarNavbar() {
     const navbarMsAuto = document.querySelector('.navbar-nav.ms-auto');
@@ -238,31 +90,19 @@ async function cargarNoches(container) {
         const result = await response.json();
 
         if (result.success) {
-            const usuarioLogged = localStorage.getItem('usuario') ? JSON.parse(localStorage.getItem('usuario')) : null;
-            const esAdmin = usuarioLogged && usuarioLogged.email.toLowerCase().startsWith('admin');
-
             container.innerHTML = ''; // Limpiar estático
             result.data.forEach(noche => {
                 // Formatear fecha (ej: YYYY-MM-DD -> DD/MM/YYYY)
                 const fecha = new Date(noche.fecha).toLocaleDateString('es-ES');
                 
-                let btnEditar = '';
-                let btnBorrar = '';
-                if (esAdmin) {
-                    btnEditar = `<button class="btn btn-link p-0 position-absolute text-warning" style="top: 15px; right: 45px; font-size: 1.2rem; text-decoration: none;" onclick="abrirModalEditarNoche(${noche.id_noche}, '${noche.fecha}', '${noche.hora_inicio}', '${noche.titulo}')" title="Editar Noche">✏️</button>`;
-                    btnBorrar = `<button class="btn btn-link p-0 position-absolute text-danger" style="top: 15px; right: 15px; font-size: 1.2rem; text-decoration: none;" onclick="borrarNocheAdmin(${noche.id_noche})" title="Borrar Noche">🗑️</button>`;
-                }
-
                 const col = document.createElement('div');
                 col.className = 'col-md-4 mb-4';
                 col.innerHTML = `
-                    <div class="card-custom position-relative">
-                        <h3>${noche.titulo}</h3>
+                    <div class="card-custom">
+                        <h3>Noche ${noche.numero_noche}</h3>
                         <p>${fecha}</p>
                         <p class="text-secondary small">Inicio: ${noche.hora_inicio}</p>
-                        <button class="btn-custom-solid mt-4" onclick="verDetalleNoche(${noche.id_noche}, '${noche.titulo}', '${fecha}')">Saber más</button>
-                        ${btnEditar}
-                        ${btnBorrar}
+                        <button class="btn-custom-solid mt-4" onclick="verDetalleNoche(${noche.id_noche}, ${noche.numero_noche}, '${fecha}')">Saber más</button>
                     </div>
                 `;
                 container.appendChild(col);
@@ -277,8 +117,8 @@ async function cargarNoches(container) {
 }
 
 // Función para redirigir al detalle de la noche guardando info en localStorage
-function verDetalleNoche(id_noche, titulo, fecha) {
-    localStorage.setItem('nocheActual', JSON.stringify({ id_noche, titulo, fecha }));
+function verDetalleNoche(id_noche, numero, fecha) {
+    localStorage.setItem('nocheActual', JSON.stringify({ id_noche, numero, fecha }));
     window.location.href = '/noche_detalle';
 }
 
@@ -288,7 +128,7 @@ if (window.location.pathname.includes('noche_detalle')) {
     document.addEventListener('DOMContentLoaded', async () => {
         const nocheInfo = JSON.parse(localStorage.getItem('nocheActual'));
         if (nocheInfo) {
-            document.getElementById('noche-titulo').textContent = nocheInfo.titulo;
+            document.getElementById('noche-titulo').textContent = `Noche ${nocheInfo.numero}`;
             document.getElementById('noche-fecha').textContent = nocheInfo.fecha;
 
             // Fetch a la BD para traer artistas
