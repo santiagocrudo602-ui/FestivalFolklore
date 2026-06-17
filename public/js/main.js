@@ -1,0 +1,205 @@
+console.log('Frontend script loaded successfully');
+
+// Protección de rutas global
+const currentPath = window.location.pathname;
+const usuarioLogueado = localStorage.getItem('usuario');
+
+if (!usuarioLogueado && currentPath !== '/login' && currentPath !== '/registro') {
+    window.location.href = '/login';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarNavbar();
+
+    // 1. Lógica para la vista de Noches
+    const nochesContainer = document.getElementById('noches-container');
+    if (nochesContainer) {
+        cargarNoches(nochesContainer);
+    }
+
+    // 2. Lógica para el Registro
+    const registroForm = document.getElementById('registroForm');
+    if (registroForm) {
+        registroForm.addEventListener('submit', registrarCliente);
+    }
+
+    // 3. Lógica para el Login
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', iniciarSesion);
+    }
+});
+
+function actualizarNavbar() {
+    const navbarMsAuto = document.querySelector('.navbar-nav.ms-auto');
+    if (navbarMsAuto && usuarioLogueado) {
+        const usuario = JSON.parse(usuarioLogueado);
+        navbarMsAuto.innerHTML = `
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle fw-bold text-info" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    👤 Mi Perfil
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="navbarDropdown">
+                    <li><h6 class="dropdown-header">${usuario.nombre_apellido}</h6></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">Cerrar sesión</a></li>
+                </ul>
+            </li>
+        `;
+    }
+}
+
+function cerrarSesion() {
+    localStorage.removeItem('usuario');
+    window.location.href = '/login';
+}
+
+async function iniciarSesion(event) {
+    event.preventDefault();
+    
+    const data = {
+        email: document.getElementById('login_email').value,
+        contrasena: document.getElementById('login_password').value
+    };
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            localStorage.setItem('usuario', JSON.stringify(result.data));
+            window.location.href = '/';
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error iniciando sesión:', error);
+        alert('Error de conexión.');
+    }
+}
+
+// Función para cargar noches desde la Base de Datos
+async function cargarNoches(container) {
+    try {
+        const response = await fetch('/api/noches');
+        const result = await response.json();
+
+        if (result.success) {
+            container.innerHTML = ''; // Limpiar estático
+            result.data.forEach(noche => {
+                // Formatear fecha (ej: YYYY-MM-DD -> DD/MM/YYYY)
+                const fecha = new Date(noche.fecha).toLocaleDateString('es-ES');
+                
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-4';
+                col.innerHTML = `
+                    <div class="card-custom">
+                        <h3>Noche ${noche.numero_noche}</h3>
+                        <p>${fecha}</p>
+                        <p class="text-secondary small">Inicio: ${noche.hora_inicio}</p>
+                        <button class="btn-custom-solid mt-4" onclick="verDetalleNoche(${noche.id_noche}, ${noche.numero_noche}, '${fecha}')">Saber más</button>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        } else {
+            container.innerHTML = '<p class="text-danger">Error al cargar las noches.</p>';
+        }
+    } catch (error) {
+        console.error('Error fetching noches:', error);
+        container.innerHTML = '<p class="text-danger">Error de conexión con el servidor.</p>';
+    }
+}
+
+// Función para redirigir al detalle de la noche guardando info en localStorage
+function verDetalleNoche(id_noche, numero, fecha) {
+    localStorage.setItem('nocheActual', JSON.stringify({ id_noche, numero, fecha }));
+    window.location.href = '/noche_detalle';
+}
+
+// 3. Lógica para la vista de Detalle de Noche
+// Si estamos en noche_detalle.html, cargar información de localStorage
+if (window.location.pathname.includes('noche_detalle')) {
+    document.addEventListener('DOMContentLoaded', async () => {
+        const nocheInfo = JSON.parse(localStorage.getItem('nocheActual'));
+        if (nocheInfo) {
+            document.getElementById('noche-titulo').textContent = `Noche ${nocheInfo.numero}`;
+            document.getElementById('noche-fecha').textContent = nocheInfo.fecha;
+
+            // Fetch a la BD para traer artistas
+            try {
+                const res = await fetch(`/api/noches/${nocheInfo.id_noche}/grupos`);
+                const result = await res.json();
+                
+                const descContainer = document.getElementById('noche-descripcion');
+                if (result.success && result.data.length > 0) {
+                    let html = '<ul class="list-unstyled mt-3">';
+                    result.data.forEach(grupo => {
+                        html += `<li><strong class="text-info">${grupo.horario} hs</strong> - ${grupo.nombre}</li>`;
+                    });
+                    html += '</ul>';
+                    descContainer.innerHTML = html;
+                } else {
+                    descContainer.innerHTML = '<p>No hay artistas confirmados para esta noche aún.</p>';
+                }
+            } catch (error) {
+                console.error("Error al traer grupos:", error);
+            }
+        }
+    });
+}
+
+// Función para manejar el registro de cliente
+async function registrarCliente(event) {
+    event.preventDefault();
+    
+    // Obtener valores del formulario
+    const data = {
+        nombre_apellido: document.getElementById('nombre_apellido').value,
+        email: document.getElementById('email').value,
+        telefono: document.getElementById('telefono').value,
+        contrasena: document.getElementById('contrasena').value,
+        ciudad: document.getElementById('ciudad').value,
+        localidad: document.getElementById('localidad').value,
+        codigo_postal: document.getElementById('codigo_postal').value
+    };
+
+    try {
+        const response = await fetch('/api/registro', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('¡Registro exitoso! Ya puedes ingresar.');
+            window.location.href = '/';
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error registrando:', error);
+        alert('Error de conexión al intentar registrarse.');
+    }
+}
+
+// Función para seleccionar butacas (ya usada en butacas.html)
+function toggleButaca(element) {
+    element.classList.toggle('selected');
+    actualizarCantidad();
+}
+
+function actualizarCantidad() {
+    const seleccionadas = document.querySelectorAll('.butaca.selected').length;
+    const countEl = document.getElementById('cantidadDisplay');
+    if(countEl) countEl.textContent = seleccionadas;
+}
