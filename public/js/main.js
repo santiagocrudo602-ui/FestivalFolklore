@@ -158,37 +158,35 @@ if (window.location.pathname.includes('noche_detalle')) {
 async function registrarCliente(event) {
     event.preventDefault();
     
-    // Obtener valores del formulario
+    const formData = new FormData(event.target);
     const data = {
-        nombre_apellido: document.getElementById('nombre_apellido').value,
-        email: document.getElementById('email').value,
-        telefono: document.getElementById('telefono').value,
-        contrasena: document.getElementById('contrasena').value,
-        ciudad: document.getElementById('ciudad').value,
-        localidad: document.getElementById('localidad').value,
-        codigo_postal: document.getElementById('codigo_postal').value
+        nombre: formData.get('nombre'),
+        apellido: formData.get('apellido'),
+        dni: formData.get('dni'),
+        direccion: formData.get('direccion'),
+        email: formData.get('email'),
+        contrasena: formData.get('contrasena')
     };
 
     try {
-        const response = await fetch('/api/registro', {
+        const response = await fetch('/api/clientes/registro', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         });
-        
+
         const result = await response.json();
-        
         if (result.success) {
-            alert('¡Registro exitoso! Ya puedes ingresar.');
-            window.location.href = '/';
+            alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+            window.location.href = '/login';
         } else {
             alert('Error: ' + result.message);
         }
     } catch (error) {
-        console.error('Error registrando:', error);
-        alert('Error de conexión al intentar registrarse.');
+        console.error('Error:', error);
+        alert('Ocurrió un error al registrarse.');
     }
 }
 

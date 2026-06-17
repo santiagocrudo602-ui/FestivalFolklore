@@ -2,16 +2,26 @@ const ClienteModel = require('../models/clienteModel');
 
 exports.registrarCliente = async (req, res) => {
     try {
-        const { nombre_apellido, email, telefono, contrasena, ciudad, localidad, codigo_postal } = req.body;
+        const { nombre, apellido, dni, direccion, email, contrasena } = req.body;
         
-        // Validar si ya existe
-        const existente = await ClienteModel.findByEmail(email);
-        if (existente) {
-            return res.status(400).json({ success: false, message: 'El email ya está registrado.' });
+        if (!nombre || !apellido || !dni || !email || !contrasena) {
+            return res.status(400).json({ success: false, message: 'Faltan campos obligatorios.' });
         }
 
+        // Verificar si el email ya existe
+        const existingUser = await ClienteModel.findByEmail(email);
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'El correo electrónico ya está registrado.' });
+        }
+
+        // Crear cliente
         const insertId = await ClienteModel.create({
-            nombre_apellido, email, telefono, contrasena, ciudad, localidad, codigo_postal
+            nombre,
+            apellido,
+            dni,
+            direccion,
+            email,
+            contrasena
         });
 
         res.json({ success: true, message: 'Registro completado con éxito.', id: insertId });

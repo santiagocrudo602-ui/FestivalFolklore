@@ -2,13 +2,13 @@ const db = require('../config/database');
 
 const ClienteModel = {
     create: async (clienteData) => {
-        const { nombre_apellido, email, telefono, contrasena, ciudad, localidad, codigo_postal } = clienteData;
+        const { nombre, apellido, dni, direccion, email, contrasena } = clienteData;
         const query = `
-            INSERT INTO CLIENTE (nombre_apellido, email, telefono, contrasena, ciudad, localidad, codigo_postal)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena)
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
         const [result] = await db.query(query, [
-            nombre_apellido, email, telefono, contrasena, ciudad, localidad, codigo_postal
+            nombre, apellido, dni, direccion, email, contrasena
         ]);
         return result.insertId;
     },

@@ -41,39 +41,30 @@
     <div class="container mt-5" style="max-width: 800px;">
         <form class="row g-4" id="registroForm">
             <div class="col-md-6">
-                <label class="form-label">Nombre y Apellido</label>
-                <input type="text" class="form-control-custom" id="nombre_apellido" name="nombre_apellido" required>
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-control-custom" id="nombre" name="nombre" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Apellido</label>
+                <input type="text" class="form-control-custom" id="apellido" name="apellido" required>
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label">DNI</label>
+                <input type="text" class="form-control-custom" id="dni" name="dni" required>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Email</label>
                 <input type="email" class="form-control-custom" id="email" name="email" required>
             </div>
-            
+
             <div class="col-md-6">
-                <label class="form-label">Número de teléfono</label>
-                <input type="text" class="form-control-custom" id="telefono" name="telefono">
+                <label class="form-label">Dirección</label>
+                <input type="text" class="form-control-custom" id="direccion" name="direccion" required>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Contraseña</label>
-                <input type="password" class="form-control-custom" id="contrasena" name="contrasena" placeholder="Password" required>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Ciudad</label>
-                <input type="text" class="form-control-custom" id="ciudad" name="ciudad">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Localidad</label>
-                <select class="form-select-custom" id="localidad" name="localidad">
-                    <option selected value="">Choose...</option>
-                    <option value="CABA">CABA</option>
-                    <option value="GBA">Gran Buenos Aires</option>
-                    <option value="Interior">Interior</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Código Postal</label>
-                <input type="text" class="form-control-custom" id="codigo_postal" name="codigo_postal">
+                <input type="password" class="form-control-custom" id="contrasena" name="contrasena" required>
             </div>
 
             <div class="col-12">
