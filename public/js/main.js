@@ -40,7 +40,7 @@ function actualizarNavbar() {
                     👤 Mi Perfil
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="navbarDropdown">
-                    <li><h6 class="dropdown-header">${usuario.nombre_apellido}</h6></li>
+                    <li><h6 class="dropdown-header">${usuario.nombre} ${usuario.apellido}</h6></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">Cerrar sesión</a></li>
                 </ul>
