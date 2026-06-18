@@ -18,11 +18,13 @@ app.use('/views', express.static(path.join(__dirname, 'views')));
 const festivalController = require('./controllers/festivalController');
 const clienteController = require('./controllers/clienteController');
 const adminController = require('./controllers/adminController');
+const entradaController = require('./controllers/entradaController');
 
 app.get('/api/noches', festivalController.getNoches);
 app.get('/api/noches/:id/grupos', festivalController.getDetalleNoche);
-app.post('/api/registro', clienteController.registrarCliente);
+app.post('/api/clientes/registro', clienteController.registrarCliente);
 app.post('/api/login', clienteController.iniciarSesion);
+app.post('/api/entradas/comprar', entradaController.comprarEntradas);
 app.post('/api/admin/noches', adminController.crearNoche);
 app.put('/api/admin/noches/:id', adminController.editarNoche);
 app.delete('/api/admin/noches/:id', adminController.borrarNoche);

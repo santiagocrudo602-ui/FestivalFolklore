@@ -230,3 +230,58 @@ function irAButacas() {
     // Redirigir a butacas
     window.location.href = '/butacas';
 }
+
+// Finalizar la compra y pedir codigos de barra al backend
+async function finalizarCompra() {
+    const usuarioStr = localStorage.getItem('usuario');
+    if (!usuarioStr) {
+        alert('Debes iniciar sesión para comprar entradas.');
+        window.location.href = '/login';
+        return;
+    }
+    const usuario = JSON.parse(usuarioStr);
+
+    const config = JSON.parse(localStorage.getItem('configCompra'));
+    if (!config) {
+        alert('No hay una configuración de compra activa.');
+        window.location.href = '/';
+        return;
+    }
+
+    const seleccionadas = document.querySelectorAll('.butaca.selected').length;
+    if (seleccionadas !== config.cantidad) {
+        alert(`Debes seleccionar exactamente ${config.cantidad} butaca(s) antes de finalizar.`);
+        return;
+    }
+
+    // id_cliente puede llamarse id o id_cliente dependiendo de cómo devuelve el login (asumimos id o id_cliente)
+    const data = {
+        id_cliente: usuario.id_cliente || usuario.id, 
+        cantidad: config.cantidad,
+        sectorId: config.sectorId,
+        publicoId: config.publicoId
+    };
+
+    try {
+        const response = await fetch('/api/entradas/comprar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            const codigosStr = result.codigos.join('\n');
+            alert(`¡Entradas reservadas con éxito!\n\nCódigos de Barra Generados:\n${codigosStr}\n\nSerás redirigido a la plataforma de pago de terceros...`);
+            
+            // Limpiar config y volver al inicio (simulando que fuimos al tercero)
+            localStorage.removeItem('configCompra');
+            window.location.href = '/';
+        } else {
+            alert('Error en la compra: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error al comprar:', error);
+        alert('Ocurrió un error al intentar finalizar la compra.');
+    }
+}
