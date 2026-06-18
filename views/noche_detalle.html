@@ -68,32 +68,31 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Público</label>
-                    <select class="form-select-custom">
-                        <option>Mayores</option>
-                        <option>Menores</option>
-                        <option>Jubilados</option>
+                    <select id="compra_publico" class="form-select-custom">
+                        <option value="1">Mayores</option>
+                        <option value="2">Menores</option>
+                        <option value="3">Jubilados</option>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Sector</label>
-                    <select class="form-select-custom">
-                        <option>A</option>
-                        <option>B</option>
-                        <option>C</option>
-                        <option>D</option>
+                    <select id="compra_sector" class="form-select-custom">
+                        <option value="1">Sector A - Rojo (VIP)</option>
+                        <option value="2">Sector B - Azul (Platea)</option>
+                        <option value="3">Sector C - Verde (Popular)</option>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Cantidad</label>
                     <div class="d-flex align-items-center mt-1">
-                        <button type="button" class="btn btn-dark border border-secondary px-3" style="background-color: #111;">-</button>
-                        <input type="text" class="form-control-custom text-center mx-1 mb-0 px-1 py-1" value="1" style="width: 40px; height: 35px;">
-                        <button type="button" class="btn btn-dark border border-secondary px-3" style="background-color: #111;">+</button>
+                        <button type="button" class="btn btn-dark border border-secondary px-3" style="background-color: #111;" onclick="modificarCantidad(-1)">-</button>
+                        <input type="text" id="compra_cantidad" class="form-control-custom text-center mx-1 mb-0 px-1 py-1" value="1" style="width: 40px; height: 35px;" readonly>
+                        <button type="button" class="btn btn-dark border border-secondary px-3" style="background-color: #111;" onclick="modificarCantidad(1)">+</button>
                     </div>
                 </div>
             </div>
             <div class="text-center mt-4">
-                <button type="button" onclick="window.location.href='/butacas'" class="btn btn-info w-50 py-2 text-white fw-bold" style="background-color: #2b99ff; border: none;">Ver butacas</button>
+                <button type="button" onclick="irAButacas()" class="btn btn-info w-50 py-2 text-white fw-bold" style="background-color: #2b99ff; border: none;">Ver butacas</button>
             </div>
           </div>
           <div class="modal-footer border-0 justify-content-end">

@@ -201,3 +201,32 @@ function actualizarCantidad() {
     const countEl = document.getElementById('cantidadDisplay');
     if(countEl) countEl.textContent = seleccionadas;
 }
+
+// Modificar cantidad en el modal de compra
+function modificarCantidad(delta) {
+    const input = document.getElementById('compra_cantidad');
+    if (!input) return;
+    
+    let value = parseInt(input.value) || 1;
+    value += delta;
+    if (value < 1) value = 1;
+    if (value > 10) value = 10; // Limite arbitrario de 10 entradas
+    input.value = value;
+}
+
+// Guardar intencion de compra y redirigir
+function irAButacas() {
+    const cantidad = document.getElementById('compra_cantidad').value;
+    const sector = document.getElementById('compra_sector').value;
+    const publico = document.getElementById('compra_publico').value;
+    
+    // Guardamos la configuración en localStorage
+    localStorage.setItem('configCompra', JSON.stringify({
+        cantidad: parseInt(cantidad),
+        sectorId: sector,
+        publicoId: publico
+    }));
+    
+    // Redirigir a butacas
+    window.location.href = '/butacas';
+}
