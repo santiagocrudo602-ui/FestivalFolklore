@@ -160,9 +160,3 @@ CREATE INDEX idx_butaca_fila     ON BUTACA  (id_fila);
 CREATE INDEX idx_entrada_cliente ON ENTRADA (id_cliente);
 CREATE INDEX idx_entrada_fecha   ON ENTRADA (fecha_venta);
 CREATE INDEX idx_cliente_dni     ON CLIENTE (dni);
-
--- Insertar datos de prueba básicos
-INSERT INTO FESTIVAL (nombre, fecha) VALUES ('Festival Nacional de Folklore V1', '2026-01-01');
-INSERT INTO NOCHE (numero_noche, fecha, hora_inicio, id_festival) VALUES 
-(1, '2026-01-20', '21:00:00', 1),
-(2, '2026-01-21', '21:00:00', 1);
