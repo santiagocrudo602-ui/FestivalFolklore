@@ -132,20 +132,20 @@ async function cargarDetalleNoche() {
         document.getElementById('noche-fecha').textContent = nocheInfo.fecha;
 
         try {
-            const query = \`
+            const query = `
                 SELECT g.id_grupo, g.nombre, g.horario 
                 FROM GRUPO g
                 JOIN NOCHE_GRUPO ng ON g.id_grupo = ng.id_grupo
                 WHERE ng.id_noche = ?
                 ORDER BY g.horario ASC
-            \`;
+            `;
             const grupos = window.queryDB(query, [nocheInfo.id_noche]);
             
             const descContainer = document.getElementById('noche-descripcion');
             if (grupos.length > 0) {
                 let html = '<ul class="list-unstyled mt-3">';
                 grupos.forEach(grupo => {
-                    html += \`<li><strong class="text-info">\${grupo.horario} hs</strong> - \${grupo.nombre}</li>\`;
+                    html += `<li><strong class="text-info">\${grupo.horario} hs</strong> - \${grupo.nombre}</li>`;
                 });
                 html += '</ul>';
                 descContainer.innerHTML = html;
@@ -167,10 +167,10 @@ async function registrarCliente(event) {
     ];
 
     try {
-        const query = \`
+        const query = `
             INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena)
             VALUES (?, ?, ?, ?, ?, ?)
-        \`;
+        `;
         window.queryDB(query, data);
         alert('¡Registro exitoso! (Aviso: como estás en GitHub Pages, los datos se borrarán al recargar)');
         window.location.href = 'login.html';
@@ -193,12 +193,12 @@ function actualizarCantidad() {
     if (configStr) {
         max = JSON.parse(configStr).cantidad;
     }
-    if(countEl) countEl.textContent = \`\${seleccionadas} / \${max}\`;
+    if(countEl) countEl.textContent = `\${seleccionadas} / \${max}`;
 
     if (seleccionadas > max) {
-        alert(\`Has alcanzado el límite de \${max} butaca(s) seleccionadas.\`);
+        alert(`Has alcanzado el límite de \${max} butaca(s) seleccionadas.`);
         document.querySelectorAll('.butaca.selected')[seleccionadas - 1].classList.remove('selected');
-        countEl.textContent = \`\${max} / \${max}\`;
+        countEl.textContent = `\${max} / \${max}`;
     }
 }
 
@@ -245,7 +245,7 @@ async function finalizarCompra() {
 
     const seleccionadas = document.querySelectorAll('.butaca.selected').length;
     if (seleccionadas !== config.cantidad) {
-        alert(\`Debes seleccionar exactamente \${config.cantidad} butaca(s) antes de finalizar.\`);
+        alert(`Debes seleccionar exactamente \${config.cantidad} butaca(s) antes de finalizar.`);
         return;
     }
 
@@ -255,22 +255,22 @@ async function finalizarCompra() {
 
         for (let i = 0; i < config.cantidad; i++) {
             const hash = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const codigoBarra = \`FEST-2026-\${hash}\`;
+            const codigoBarra = `FEST-2026-\${hash}`;
             
             const id_precio = 1;
             const id_punto = 1;
             const id_butaca = Math.floor(Math.random() * 30) + 1;
 
-            window.queryDB(\`
+            window.queryDB(`
                 INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_tipo, id_punto, id_cliente, id_butaca)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            \`, [hoy, codigoBarra, id_precio, config.publicoId, id_punto, usuario.id_cliente || 1, id_butaca]);
+            `, [hoy, codigoBarra, id_precio, config.publicoId, id_punto, usuario.id_cliente || 1, id_butaca]);
 
             codigosGenerados.push(codigoBarra);
         }
 
         const codigosStr = codigosGenerados.join('\\n');
-        alert(\`¡Entradas reservadas con éxito!\\n\\nCódigos de Barra Generados:\\n\${codigosStr}\\n\\n(Nota: La reserva es temporal debido al modo estático en GitHub Pages).\`);
+        alert(`¡Entradas reservadas con éxito!\\n\\nCódigos de Barra Generados:\\n\${codigosStr}\\n\\n(Nota: La reserva es temporal debido al modo estático en GitHub Pages).`);
         
         localStorage.removeItem('configCompra');
         window.location.href = '../index.html';
