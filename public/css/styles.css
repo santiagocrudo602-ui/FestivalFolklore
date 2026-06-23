@@ -1,0 +1,148 @@
+body {
+    background-color: #121212;
+    color: #ffffff;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Fondo con la imagen opacada original */
+    background-image: url('../img/fondo.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+.navbar {
+    background-color: #16364c;
+    border-bottom: 1px solid #1f4a66;
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+.nav-link {
+    color: #9ba6b2 !important;
+    transition: color 0.3s;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #ffffff !important;
+}
+
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.title-box {
+    display: inline-block;
+    border: 1px solid #ffffff;
+    padding: 20px 40px;
+    margin-bottom: 30px;
+}
+
+.title-box h1 {
+    font-weight: 800;
+    font-size: 2.5rem;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.hero-section h2 {
+    font-weight: 700;
+    font-size: 2rem;
+}
+
+.hero-section p {
+    color: #cccccc;
+    font-size: 1.1rem;
+}
+
+.btn-custom-outline {
+    display: inline-block;
+    border: 1px solid #17a2b8;
+    color: #17a2b8;
+    background: transparent;
+    padding: 12px 40px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.btn-custom-outline:hover {
+    background-color: #17a2b8;
+    color: #121212;
+}
+
+/* Cards (Noches) */
+.card-custom {
+    background-color: #111111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 20px;
+    height: 100%;
+    transition: transform 0.3s;
+}
+
+.card-custom:hover {
+    transform: translateY(-5px);
+    border-color: #333;
+}
+
+.btn-custom-solid {
+    background-color: #2173a1;
+    color: #ffffff;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-custom-solid:hover {
+    background-color: #1c6188;
+    color: #ffffff;
+}
+
+/* Modal and Forms */
+.modal-content.custom-modal {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #333;
+}
+
+.modal-footer {
+    border-top: 1px solid #333;
+}
+
+.form-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-control-custom, .form-select-custom {
+    background-color: #111111;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.form-control-custom:focus, .form-select-custom:focus {
+    outline: none;
+    border-color: #2173a1;
+}
