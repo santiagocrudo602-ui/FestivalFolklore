@@ -145,7 +145,7 @@ async function cargarDetalleNoche() {
             if (grupos.length > 0) {
                 let html = '<ul class="list-unstyled mt-3">';
                 grupos.forEach(grupo => {
-                    html += `<li><strong class="text-info">\${grupo.horario} hs</strong> - \${grupo.nombre}</li>`;
+                    html += `<li><strong class="text-info">${grupo.horario} hs</strong> - ${grupo.nombre}</li>`;
                 });
                 html += '</ul>';
                 descContainer.innerHTML = html;
@@ -193,12 +193,12 @@ function actualizarCantidad() {
     if (configStr) {
         max = JSON.parse(configStr).cantidad;
     }
-    if(countEl) countEl.textContent = `\${seleccionadas} / \${max}`;
+    if(countEl) countEl.textContent = `${seleccionadas} / ${max}`;
 
     if (seleccionadas > max) {
-        alert(`Has alcanzado el límite de \${max} butaca(s) seleccionadas.`);
+        alert(`Has alcanzado el límite de ${max} butaca(s) seleccionadas.`);
         document.querySelectorAll('.butaca.selected')[seleccionadas - 1].classList.remove('selected');
-        countEl.textContent = `\${max} / \${max}`;
+        countEl.textContent = `${max} / ${max}`;
     }
 }
 
@@ -245,7 +245,7 @@ async function finalizarCompra() {
 
     const seleccionadas = document.querySelectorAll('.butaca.selected').length;
     if (seleccionadas !== config.cantidad) {
-        alert(`Debes seleccionar exactamente \${config.cantidad} butaca(s) antes de finalizar.`);
+        alert(`Debes seleccionar exactamente ${config.cantidad} butaca(s) antes de finalizar.`);
         return;
     }
 
@@ -255,7 +255,7 @@ async function finalizarCompra() {
 
         for (let i = 0; i < config.cantidad; i++) {
             const hash = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const codigoBarra = `FEST-2026-\${hash}`;
+            const codigoBarra = `FEST-2026-${hash}`;
             
             const id_precio = 1;
             const id_punto = 1;
@@ -269,8 +269,8 @@ async function finalizarCompra() {
             codigosGenerados.push(codigoBarra);
         }
 
-        const codigosStr = codigosGenerados.join('\\n');
-        alert(`¡Entradas reservadas con éxito!\\n\\nCódigos de Barra Generados:\\n\${codigosStr}\\n\\n(Nota: La reserva es temporal debido al modo estático en GitHub Pages).`);
+        const codigosStr = codigosGenerados.join('\n');
+        alert(`¡Entradas reservadas con éxito!\n\nCódigos de Barra Generados:\n${codigosStr}\n\n(Nota: La reserva es temporal debido al modo estático en GitHub Pages).`);
         
         localStorage.removeItem('configCompra');
         window.location.href = '../index.html';
