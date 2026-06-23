@@ -276,6 +276,6 @@ async function finalizarCompra() {
         window.location.href = '../index.html';
     } catch (error) {
         console.error('Error al comprar:', error);
-        alert('Ocurrió un error al intentar finalizar la compra en SQLite Local.');
+        alert('Ocurrió un error al intentar finalizar la compra: ' + error.message);
     }
 }
