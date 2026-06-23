@@ -30,7 +30,7 @@ app.put('/api/admin/noches/:id', adminController.editarNoche);
 app.delete('/api/admin/noches/:id', adminController.borrarNoche);
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/noches', (req, res) => {
