@@ -11,19 +11,54 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
     const dbPath = isRoot ? 'database/festival.db' : '../database/festival.db';
 
     try {
-        const response = await fetch(dbPath);
-        if (!response.ok) {
-            throw new Error(`Error HTTP descargando DB: ${response.status}`);
+        // Buscar si ya hay una base de datos modificada guardada localmente
+        const savedDB = localStorage.getItem('festival_db_data');
+        let buffer;
+
+        if (savedDB) {
+            console.log("Cargando DB desde LocalStorage (Persistente)...");
+            const binaryString = atob(savedDB);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            buffer = bytes.buffer;
+        } else {
+            console.log("Cargando DB original estática desde el servidor...");
+            const response = await fetch(dbPath);
+            if (!response.ok) {
+                throw new Error(`Error HTTP descargando DB: ${response.status}`);
+            }
+            buffer = await response.arrayBuffer();
         }
-        const buffer = await response.arrayBuffer();
+
         window.appDB = new SQL.Database(new Uint8Array(buffer));
         console.log("Base de datos montada en memoria exitosamente.");
+
+        // Función para guardar cambios en LocalStorage
+        window.saveDBToLocal = function() {
+            try {
+                const data = window.appDB.export();
+                let binary = '';
+                // Chunking to avoid RangeError in String.fromCharCode.apply for large arrays
+                const chunkSize = 8192;
+                for (let i = 0; i < data.length; i += chunkSize) {
+                    binary += String.fromCharCode.apply(null, data.subarray(i, i + chunkSize));
+                }
+                localStorage.setItem('festival_db_data', btoa(binary));
+                console.log("Cambios guardados en LocalStorage.");
+            } catch(e) {
+                console.warn("No se pudo guardar la DB en LocalStorage (puede que exceda la cuota).", e);
+            }
+        };
         
         // Helper para emular cómo mysql2 devolvía arreglos de objetos
         window.queryDB = function(sql, params = []) {
             try {
                 if (!sql.trim().toUpperCase().startsWith('SELECT')) {
                     window.appDB.run(sql, params);
+                    window.saveDBToLocal(); // Guardar automáticamente si es INSERT/UPDATE/DELETE
                     return { success: true }; 
                 }
 
