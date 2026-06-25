@@ -205,8 +205,8 @@ INSERT INTO DESCUENTO (porcentaje, fecha_limite) VALUES
 
 -- 12. CLIENTES DE PRUEBA
 INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena) VALUES 
-('Admin', 'Organizador', '11111111', 'Muni 123', 'admin@folklore.com', 'admin123'),
-('Juan', 'Pérez', '22222222', 'Calle Falsa 123', 'juan@mail.com', '123456');
+('Admin', 'Organizador', '11111111', 'Muni 123', 'admin@folklore.com', '$2b$10$RddgVs2pnU0t.hHt5pU81.kPRS3xQwDx8hJ9AUkqZ8EEa33mv8qES'),
+('Juan', 'Pérez', '22222222', 'Calle Falsa 123', 'juan@mail.com', '$2b$10$z7OHTfb7akAkhedNW6mr4uoYZanOjmdXEidcJW1RQl.BLWPOqG7qS');
 `;
 
 async function init() {

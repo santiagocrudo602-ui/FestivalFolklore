@@ -41,6 +41,7 @@ function actualizarNavbar() {
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="navbarDropdown">
                     <li><h6 class="dropdown-header">${usuario.nombre} ${usuario.apellido}</h6></li>
+                    <li><a class="dropdown-item" href="/mis-entradas">Mis Entradas</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">Cerrar sesión</a></li>
                 </ul>
@@ -54,9 +55,11 @@ function cerrarSesion() {
     window.location.href = '/login';
 }
 
+let tempEmail = '';
+
 async function iniciarSesion(event) {
     event.preventDefault();
-    
+
     const data = {
         email: document.getElementById('login_email').value,
         contrasena: document.getElementById('login_password').value
@@ -71,8 +74,13 @@ async function iniciarSesion(event) {
         
         const result = await response.json();
         
-        if (result.success) {
+        if (result.success && result.require2FA) {
+            tempEmail = result.email;
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('verifyForm').style.display = 'block';
+        } else if (result.success) {
             localStorage.setItem('usuario', JSON.stringify(result.data));
+            localStorage.setItem('token', result.token);
             window.location.href = '/';
         } else {
             alert('Error: ' + result.message);
@@ -82,6 +90,58 @@ async function iniciarSesion(event) {
         alert('Error de conexión.');
     }
 }
+
+async function verificarCodigo(event) {
+    event.preventDefault();
+
+    const data = {
+        email: tempEmail,
+        codigo: document.getElementById('verify_code').value
+    };
+
+    try {
+        const response = await fetch('/api/login/verificar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            localStorage.setItem('usuario', JSON.stringify(result.data));
+            localStorage.setItem('token', result.token);
+            window.location.href = '/';
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error verificando:', error);
+        alert('Error de conexión.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarNavbar();
+
+    // 1. Lógica para la vista de Noches
+    const nochesContainer = document.getElementById('noches-container');
+    if (nochesContainer) {
+        cargarNoches(nochesContainer);
+    }
+
+    // 2. Lógica para el Registro
+    const registroForm = document.getElementById('registroForm');
+    if (registroForm) {
+        registroForm.addEventListener('submit', registrarCliente);
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.addEventListener('submit', iniciarSesion);
+
+    const verifyForm = document.getElementById('verifyForm');
+    if (verifyForm) verifyForm.addEventListener('submit', verificarCodigo);
+});
 
 // Función para cargar noches desde la Base de Datos
 async function cargarNoches(container) {
@@ -269,9 +329,13 @@ async function finalizarCompra() {
     };
 
     try {
+        const token = localStorage.getItem('token');
         const response = await fetch('/api/entradas/comprar', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            },
             body: JSON.stringify(data)
         });
 

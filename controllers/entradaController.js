@@ -7,7 +7,7 @@ let purchaseMutex = false;
 
 exports.comprarEntradas = async (req, res) => {
     try {
-        const { id_cliente, nocheId, cantidad, sectorId, publicoId, butacasIds } = req.body;
+        const { id_cliente, nocheId, cantidad, sectorId, publicoId, butacasIds, id_punto: reqPunto } = req.body;
 
         if (!id_cliente || !nocheId || !cantidad || !publicoId || !butacasIds || butacasIds.length !== cantidad) {
             return res.status(400).json({ success: false, message: 'Datos incompletos o inconsistentes para la compra.' });
@@ -48,7 +48,7 @@ exports.comprarEntradas = async (req, res) => {
                 const hash = crypto.randomBytes(4).toString('hex').toUpperCase();
                 const codigoBarra = `FEST-2026-${hash}`;
 
-                const id_punto = 1; 
+                const id_punto = reqPunto || 1; 
                 const id_butaca = butacasIds[i]; // Asignado por la selección en UI
 
                 await EntradaModel.create({

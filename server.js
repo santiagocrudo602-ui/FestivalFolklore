@@ -20,11 +20,15 @@ const clienteController = require('./controllers/clienteController');
 const adminController = require('./controllers/adminController');
 const entradaController = require('./controllers/entradaController');
 
+const authMiddleware = require('./middleware/auth');
+
 app.get('/api/noches', festivalController.getNoches);
 app.get('/api/noches/:id/grupos', festivalController.getDetalleNoche);
 app.post('/api/clientes/registro', clienteController.registrarCliente);
 app.post('/api/login', clienteController.iniciarSesion);
-app.post('/api/entradas/comprar', entradaController.comprarEntradas);
+app.post('/api/login/verificar', clienteController.verificarLogin);
+app.get('/api/clientes/:id/entradas', authMiddleware, clienteController.getMisEntradas);
+app.post('/api/entradas/comprar', authMiddleware, entradaController.comprarEntradas);
 app.post('/api/admin/noches', adminController.crearNoche);
 app.put('/api/admin/noches/:id', adminController.editarNoche);
 app.delete('/api/admin/noches/:id', adminController.borrarNoche);
@@ -51,6 +55,10 @@ app.get('/registro', (req, res) => {
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'login.html'));
+});
+
+app.get('/mis-entradas', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'mis_entradas.html'));
 });
 
 app.listen(PORT, () => {
