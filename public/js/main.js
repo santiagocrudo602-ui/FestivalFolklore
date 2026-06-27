@@ -34,6 +34,11 @@ document.addEventListener('db_ready', () => {
         loginForm.addEventListener('submit', iniciarSesion);
     }
 
+    const verifyForm = document.getElementById('verifyForm');
+    if (verifyForm) {
+        verifyForm.addEventListener('submit', verificarCodigo);
+    }
+
     // 4. Lógica para el Detalle de Noche
     if (window.location.pathname.includes('noche_detalle')) {
         cargarDetalleNoche();
@@ -51,6 +56,7 @@ function actualizarNavbar() {
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="navbarDropdown">
                     <li><h6 class="dropdown-header">${usuario.nombre} ${usuario.apellido}</h6></li>
+                    <li><a class="dropdown-item" href="mis_entradas.html">Mis Entradas</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">Cerrar sesión</a></li>
                 </ul>
@@ -65,6 +71,8 @@ function cerrarSesion() {
     window.location.href = depth + 'login.html';
 }
 
+let tempUsuario = null;
+
 async function iniciarSesion(event) {
     event.preventDefault();
     
@@ -75,17 +83,28 @@ async function iniciarSesion(event) {
         const rows = window.queryDB('SELECT * FROM CLIENTE WHERE email = ? AND contrasena = ?', [email, contrasena]);
         
         if (rows.length > 0) {
-            const usuario = rows[0];
-            delete usuario.contrasena;
-            localStorage.setItem('usuario', JSON.stringify(usuario));
-            const depth = window.location.pathname.includes('views') ? '../' : '';
-            window.location.href = depth + 'index.html';
+            tempUsuario = rows[0];
+            delete tempUsuario.contrasena;
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('verifyForm').style.display = 'block';
         } else {
             alert('Error: Credenciales inválidas.');
         }
     } catch (error) {
         console.error('Error iniciando sesión:', error);
         alert('Error local ejecutando consulta.');
+    }
+}
+
+function verificarCodigo(event) {
+    event.preventDefault();
+    const codigo = document.getElementById('verify_code').value;
+    if (codigo.length === 6) {
+        localStorage.setItem('usuario', JSON.stringify(tempUsuario));
+        const depth = window.location.pathname.includes('views') ? '../' : '';
+        window.location.href = depth + 'index.html';
+    } else {
+        alert('Ingresa un código de 6 dígitos válido.');
     }
 }
 
