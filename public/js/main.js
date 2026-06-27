@@ -49,6 +49,7 @@ function actualizarNavbar() {
     const navbarMsAuto = document.querySelector('.navbar-nav.ms-auto');
     if (navbarMsAuto && usuarioLogueado) {
         const usuario = JSON.parse(usuarioLogueado);
+        const depth = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') ? 'views/' : '';
         navbarMsAuto.innerHTML = `
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle fw-bold text-info" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -56,7 +57,7 @@ function actualizarNavbar() {
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="navbarDropdown">
                     <li><h6 class="dropdown-header">${usuario.nombre} ${usuario.apellido}</h6></li>
-                    <li><a class="dropdown-item" href="mis_entradas.html">Mis Entradas</a></li>
+                    <li><a class="dropdown-item" href="${depth}mis_entradas.html">Mis Entradas</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">Cerrar sesión</a></li>
                 </ul>
