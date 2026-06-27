@@ -341,8 +341,10 @@ async function finalizarCompra() {
 
         const result = await response.json();
         if (result.success) {
-            const codigosStr = result.codigos.join('\n');
-            alert(`¡Entradas reservadas con éxito!\n\nCódigos de Barra Generados:\n${codigosStr}\n\nSerás redirigido a la plataforma de pago de terceros...`);
+            const codigosStr = result.codigos.map(c => 
+                typeof c === 'object' ? `Entrada: ${c.codigoBarra} (Factura: ${c.numero_factura})` : c
+            ).join('\n');
+            alert(`¡Entradas reservadas con éxito!\n\nCódigos Generados:\n${codigosStr}\n\nSerás redirigido a la plataforma de pago de terceros...`);
             
             // Limpiar config y volver al inicio (simulando que fuimos al tercero)
             localStorage.removeItem('configCompra');

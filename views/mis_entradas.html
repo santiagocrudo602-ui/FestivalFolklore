@@ -33,10 +33,13 @@
                 <table class="table table-hover table-dark align-middle">
                     <thead>
                         <tr>
-                            <th>Código de Barra</th>
-                            <th>Noche</th>
-                            <th>Butaca</th>
-                            <th>Fecha de Compra</th>
+                            <th>Entrada (Código)</th>
+                            <th>Nº Factura</th>
+                            <th>Noche / Butaca</th>
+                            <th>Monto Base</th>
+                            <th>Descuento</th>
+                            <th>Total Pagado</th>
+                            <th>Fecha</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-entradas">
@@ -81,10 +84,17 @@
                     } else {
                         result.data.forEach(entrada => {
                             const tr = document.createElement('tr');
+                            const precioBase = parseFloat(entrada.precio_base) || 0;
+                            const descPorcentaje = parseFloat(entrada.descuento) || 0;
+                            const total = precioBase - (precioBase * (descPorcentaje / 100));
+
                             tr.innerHTML = `
-                                <td><strong>${entrada.codigoBarra}</strong></td>
-                                <td>Noche ${entrada.noche}</td>
-                                <td>${entrada.butaca}</td>
+                                <td><strong class="text-info">${entrada.codigoBarra}</strong></td>
+                                <td>${entrada.numero_factura}</td>
+                                <td>Noche ${entrada.noche} - Butaca ${entrada.butaca}</td>
+                                <td>$${precioBase.toFixed(2)}</td>
+                                <td>${descPorcentaje > 0 ? descPorcentaje + '%' : '-'}</td>
+                                <td><strong class="text-success">$${total.toFixed(2)}</strong></td>
                                 <td>${new Date(entrada.fecha_venta).toLocaleDateString('es-ES')}</td>
                             `;
                             tbody.appendChild(tr);

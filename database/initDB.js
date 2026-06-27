@@ -34,7 +34,11 @@ CREATE TABLE IF NOT EXISTS PRECIO (
     id_precio INTEGER PRIMARY KEY AUTOINCREMENT,
     monto     DECIMAL(10,2)  NOT NULL,
     id_noche  INT            NOT NULL,
-    FOREIGN KEY (id_noche) REFERENCES NOCHE (id_noche) ON DELETE RESTRICT ON UPDATE CASCADE
+    id_tipo   INT            NOT NULL,
+    id_sector INT            NOT NULL,
+    FOREIGN KEY (id_noche) REFERENCES NOCHE (id_noche) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (id_tipo)  REFERENCES TIPO_ENTRADA (id_tipo) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (id_sector) REFERENCES SECTOR (id_sector) ON DELETE RESTRICT ON UPDATE CASCADE
 );
  
 CREATE TABLE IF NOT EXISTS SECTOR (
@@ -95,6 +99,7 @@ CREATE TABLE IF NOT EXISTS ENTRADA (
     id_entrada   INTEGER PRIMARY KEY AUTOINCREMENT,
     fecha_venta  DATE         NOT NULL,
     codigoBarra  VARCHAR(50)  NOT NULL UNIQUE,
+    numero_factura VARCHAR(50) NOT NULL UNIQUE,
     id_precio    INT          NOT NULL,
     id_tipo      INT          NOT NULL,
     id_punto     INT          NOT NULL,
@@ -191,17 +196,57 @@ INSERT INTO TIPO_ENTRADA (descripcion) VALUES
 ('Menores'),
 ('Jubilados');
 
--- 10. PRECIOS BÁSICOS POR NOCHE 
-INSERT INTO PRECIO (monto, id_noche) VALUES 
-(15000.00, 1),
-(18000.00, 2),
-(20000.00, 3),
-(15000.00, 4),
-(25000.00, 5);
+-- 10. PRECIOS POR NOCHE, SECTOR Y TIPO
+INSERT INTO PRECIO (monto, id_noche, id_tipo, id_sector) VALUES 
+(22500.00, 1, 1, 1),
+(11250.00, 1, 2, 1),
+(15750.00, 1, 3, 1),
+(18000.00, 1, 1, 2),
+(9000.00, 1, 2, 2),
+(12600.00, 1, 3, 2),
+(15000.00, 1, 1, 3),
+(7500.00, 1, 2, 3),
+(10500.00, 1, 3, 3),
+(27000.00, 2, 1, 1),
+(13500.00, 2, 2, 1),
+(18900.00, 2, 3, 1),
+(21600.00, 2, 1, 2),
+(10800.00, 2, 2, 2),
+(15120.00, 2, 3, 2),
+(18000.00, 2, 1, 3),
+(9000.00, 2, 2, 3),
+(12600.00, 2, 3, 3),
+(30000.00, 3, 1, 1),
+(15000.00, 3, 2, 1),
+(21000.00, 3, 3, 1),
+(24000.00, 3, 1, 2),
+(12000.00, 3, 2, 2),
+(16800.00, 3, 3, 2),
+(20000.00, 3, 1, 3),
+(10000.00, 3, 2, 3),
+(14000.00, 3, 3, 3),
+(22500.00, 4, 1, 1),
+(11250.00, 4, 2, 1),
+(15750.00, 4, 3, 1),
+(18000.00, 4, 1, 2),
+(9000.00, 4, 2, 2),
+(12600.00, 4, 3, 2),
+(15000.00, 4, 1, 3),
+(7500.00, 4, 2, 3),
+(10500.00, 4, 3, 3),
+(37500.00, 5, 1, 1),
+(18750.00, 5, 2, 1),
+(26250.00, 5, 3, 1),
+(30000.00, 5, 1, 2),
+(15000.00, 5, 2, 2),
+(21000.00, 5, 3, 2),
+(25000.00, 5, 1, 3),
+(12500.00, 5, 2, 3),
+(17500.00, 5, 3, 3);
 
 -- 11. DESCUENTOS
 INSERT INTO DESCUENTO (porcentaje, fecha_limite) VALUES 
-(10.00, '2026-01-10');
+(10.00, '2027-01-10');
 
 -- 12. CLIENTES DE PRUEBA
 INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena) VALUES 

@@ -30,13 +30,17 @@ const ClienteModel = {
         const query = `
             SELECT 
                 e.codigoBarra, 
+                e.numero_factura,
                 e.fecha_venta, 
                 n.numero_noche as noche, 
-                b.numero as butaca 
+                b.numero as butaca,
+                p.monto as precio_base,
+                d.porcentaje as descuento
             FROM ENTRADA e
             JOIN PRECIO p ON e.id_precio = p.id_precio
             JOIN NOCHE n ON p.id_noche = n.id_noche
             JOIN BUTACA b ON e.id_butaca = b.id_butaca
+            LEFT JOIN DESCUENTO d ON e.id_descuento = d.id_descuento
             WHERE e.id_cliente = ?
             ORDER BY e.id_entrada DESC
         `;
