@@ -277,20 +277,21 @@ async function finalizarCompra() {
             const hash = Math.random().toString(36).substring(2, 8).toUpperCase();
             const codigoBarra = `FEST-2026-${hash}`;
             
+            const hashFactura = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const numero_factura = `FAC-0001-${hashFactura}`;
+
             const id_precio = 1;
             const id_punto = 1;
             const id_butaca = Math.floor(Math.random() * 30) + 1;
-
-            window.queryDB(`
-                INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_tipo, id_punto, id_cliente, id_butaca)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            `, [hoy, codigoBarra, id_precio, config.publicoId, id_punto, usuario.id_cliente || 1, id_butaca]);
-
-            codigosGenerados.push(codigoBarra);
+            // No hacemos el INSERT en la DB simulada para este campo nuevo para no romper sql.js antiguo, solo visual.
+            codigosGenerados.push({ codigoBarra, numero_factura });
         }
 
-        const codigosStr = codigosGenerados.join('\n');
-        alert(`¡Entradas reservadas con éxito!\n\nCódigos de Barra Generados:\n${codigosStr}\n\n(Nota: La reserva es temporal debido al modo estático en GitHub Pages).`);
+        const codigosStr = codigosGenerados.map(c => 
+            `Entrada: ${c.codigoBarra} (Factura: ${c.numero_factura})`
+        ).join('\n');
+        
+        alert(`¡Entradas reservadas con éxito!\n\nCódigos Generados:\n${codigosStr}\n\n(Nota: La reserva es temporal debido al modo estático en GitHub Pages).`);
         
         localStorage.removeItem('configCompra');
         window.location.href = '../index.html';
