@@ -2,13 +2,13 @@ const AdminModel = require('../models/adminModel');
 
 exports.crearNoche = async (req, res) => {
     try {
-        const { fecha, hora_inicio, titulo } = req.body;
+        const { fecha, hora_inicio } = req.body;
         
         if (!fecha || !hora_inicio) {
             return res.status(400).json({ success: false, message: 'La fecha y la hora son obligatorias.' });
         }
 
-        const data = await AdminModel.crearNoche({ fecha, hora_inicio, titulo });
+        const data = await AdminModel.crearNoche({ fecha, hora_inicio });
 
         res.json({ 
             success: true, 
@@ -16,7 +16,6 @@ exports.crearNoche = async (req, res) => {
             noche: {
                 id_noche: data.insertId,
                 numero_noche: data.numero_noche,
-                titulo: data.titulo,
                 fecha: fecha,
                 hora_inicio: hora_inicio
             }
@@ -30,13 +29,13 @@ exports.crearNoche = async (req, res) => {
 exports.editarNoche = async (req, res) => {
     try {
         const id_noche = req.params.id;
-        const { fecha, hora_inicio, titulo } = req.body;
+        const { fecha, hora_inicio } = req.body;
 
-        if (!fecha || !hora_inicio || !titulo) {
-            return res.status(400).json({ success: false, message: 'La fecha, la hora y el título son obligatorios.' });
+        if (!fecha || !hora_inicio) {
+            return res.status(400).json({ success: false, message: 'La fecha y la hora son obligatorias.' });
         }
 
-        const success = await AdminModel.editarNoche(id_noche, { fecha, hora_inicio, titulo });
+        const success = await AdminModel.editarNoche(id_noche, { fecha, hora_inicio });
 
         if (success) {
             res.json({ success: true, message: 'Noche actualizada con éxito.' });

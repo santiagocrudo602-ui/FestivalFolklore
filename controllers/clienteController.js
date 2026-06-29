@@ -26,6 +26,10 @@ exports.registrarCliente = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Faltan campos obligatorios.' });
         }
 
+        if (contrasena.length < 8) {
+            return res.status(400).json({ success: false, message: 'La contraseña debe tener al menos 8 caracteres.' });
+        }
+
         // Verificar si el email ya existe
         const existingUser = await ClienteModel.findByEmail(email);
         if (existingUser) {
@@ -101,7 +105,7 @@ exports.verificarLogin = async (req, res) => {
         
         const { user } = entry;
         const token = jwt.sign(
-            { id_cliente: user.id_cliente, email: user.email },
+            { id_cliente: user.id_cliente, email: user.email, rol: user.rol },
             process.env.JWT_SECRET || 'supersecreto',
             { expiresIn: '2h' }
         );

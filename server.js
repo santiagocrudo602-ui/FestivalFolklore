@@ -21,6 +21,7 @@ const adminController = require('./controllers/adminController');
 const entradaController = require('./controllers/entradaController');
 
 const authMiddleware = require('./middleware/auth');
+const adminAuth = require('./middleware/adminAuth');
 
 app.get('/api/noches', festivalController.getNoches);
 app.get('/api/noches/:id/grupos', festivalController.getDetalleNoche);
@@ -29,9 +30,9 @@ app.post('/api/login', clienteController.iniciarSesion);
 app.post('/api/login/verificar', clienteController.verificarLogin);
 app.get('/api/clientes/:id/entradas', authMiddleware, clienteController.getMisEntradas);
 app.post('/api/entradas/comprar', authMiddleware, entradaController.comprarEntradas);
-app.post('/api/admin/noches', adminController.crearNoche);
-app.put('/api/admin/noches/:id', adminController.editarNoche);
-app.delete('/api/admin/noches/:id', adminController.borrarNoche);
+app.post('/api/admin/noches', authMiddleware, adminAuth, adminController.crearNoche);
+app.put('/api/admin/noches/:id', authMiddleware, adminAuth, adminController.editarNoche);
+app.delete('/api/admin/noches/:id', authMiddleware, adminAuth, adminController.borrarNoche);
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
