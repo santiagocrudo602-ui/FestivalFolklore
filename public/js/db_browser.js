@@ -11,7 +11,7 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
     const dbPath = isRoot ? 'database/festival.db' : '../database/festival.db';
 
     try {
-        const CURRENT_DB_VERSION = '2.0';
+        const CURRENT_DB_VERSION = '2.1';
         const storedVersion = localStorage.getItem('festival_db_version');
         
         let savedDB = null;
@@ -38,7 +38,7 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
             buffer = bytes.buffer;
         } else {
             console.log("Cargando DB original estática desde el servidor...");
-            const response = await fetch(dbPath + '?v=2.0');
+            const response = await fetch(dbPath + '?v=2.1');
             if (!response.ok) {
                 throw new Error(`Error HTTP descargando DB: ${response.status}`);
             }
