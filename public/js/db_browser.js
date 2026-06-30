@@ -38,7 +38,7 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
             buffer = bytes.buffer;
         } else {
             console.log("Cargando DB original estática desde el servidor...");
-            const response = await fetch(dbPath);
+            const response = await fetch(dbPath + '?v=2.0');
             if (!response.ok) {
                 throw new Error(`Error HTTP descargando DB: ${response.status}`);
             }
