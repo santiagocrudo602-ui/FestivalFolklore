@@ -15,7 +15,7 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
         const storedVersion = localStorage.getItem('festival_db_version');
         
         let savedDB = null;
-        if (storedVersion === CURRENT_DB_VERSION) {
+        if (storedVersion && parseFloat(storedVersion) >= parseFloat(CURRENT_DB_VERSION)) {
             savedDB = localStorage.getItem('festival_db_data');
         } else {
             console.log("Nueva estructura de DB detectada. Limpiando BD antigua...");
