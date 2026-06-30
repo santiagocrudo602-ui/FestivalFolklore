@@ -58,7 +58,7 @@
 
     <!-- Modal Compra -->
     <div class="modal fade" id="modalCompra" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content custom-modal">
           <div class="modal-header border-0">
             <h5 class="modal-title">Compra tu entrada</h5>
@@ -87,9 +87,9 @@
                   <div class="col-sm-6 mb-3">
                       <label class="form-label">Sector</label>
                       <select id="compra_sector" class="form-select-custom">
-                          <option value="1">Sector A - Rojo (VIP)</option>
-                          <option value="2">Sector B - Azul (Platea)</option>
-                          <option value="3">Sector C - Verde (Popular)</option>
+                          <option value="1">Sector A (VIP)</option>
+                          <option value="2">Sector B (Platea)</option>
+                          <option value="3">Sector C (Popular)</option>
                       </select>
                   </div>
                   <div class="col-sm-6 mb-3">
@@ -100,10 +100,10 @@
                         <button type="button" class="btn btn-dark border border-secondary px-3" style="background-color: #111;" onclick="modificarCantidad(1)">+</button>
                     </div>
                 </div>
-            </div>
-            <div class="text-center mt-4">
-                <button type="button" onclick="irAButacas()" class="btn btn-info w-50 py-2 text-white fw-bold" style="background-color: #2b99ff; border: none;">Ver butacas</button>
-            </div>
+              </div>
+              <div class="text-center mt-4">
+                  <button type="button" onclick="irAButacas()" class="btn btn-info w-100 py-2 text-white fw-bold" style="background-color: #2b99ff; border: none;">Ver butacas</button>
+              </div>
           </div>
           <div class="modal-footer border-0 justify-content-end">
             <button type="button" class="btn btn-secondary px-4 py-2" style="background-color: #777; border: none;" data-bs-dismiss="modal">Volver</button>
