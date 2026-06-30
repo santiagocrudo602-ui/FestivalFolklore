@@ -11,8 +11,20 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
     const dbPath = isRoot ? 'database/festival.db' : '../database/festival.db';
 
     try {
-        // Buscar si ya hay una base de datos modificada guardada localmente
-        const savedDB = localStorage.getItem('festival_db_data');
+        const CURRENT_DB_VERSION = '2.0';
+        const storedVersion = localStorage.getItem('festival_db_version');
+        
+        let savedDB = null;
+        if (storedVersion === CURRENT_DB_VERSION) {
+            savedDB = localStorage.getItem('festival_db_data');
+        } else {
+            console.log("Nueva estructura de DB detectada. Limpiando BD antigua...");
+            localStorage.removeItem('festival_db_data');
+            localStorage.setItem('festival_db_version', CURRENT_DB_VERSION);
+            // También limpiamos el usuario para forzar re-login con la nueva DB
+            localStorage.removeItem('usuario');
+        }
+
         let buffer;
 
         if (savedDB) {
