@@ -95,6 +95,6 @@ INSERT INTO DESCUENTO (porcentaje, fecha_limite) VALUES
 (10.00, '2026-01-10'); -- 10% hasta un mes antes
 
 -- 12. CLIENTES DE PRUEBA (con contraseñas básicas para poder hacer login)
-INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena) VALUES 
-('Admin', 'Organizador', '11111111', 'Muni 123', 'admin@folklore.com', 'admin123'),
-('Juan', 'Pérez', '22222222', 'Calle Falsa 123', 'juan@mail.com', '123456');
+INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena, rol) VALUES 
+('Admin', 'Organizador', '11111111', 'Muni 123', 'admin@folklore.com', 'admin123', 'admin'),
+('Juan', 'Pérez', '22222222', 'Calle Falsa 123', 'juan@mail.com', '123456', 'user');

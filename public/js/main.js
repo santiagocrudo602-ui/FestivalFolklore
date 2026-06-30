@@ -181,9 +181,15 @@ async function cargarDetalleNoche() {
 async function registrarCliente(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
+    const contrasena = formData.get('contrasena');
+    if (contrasena.length < 8) {
+        alert('La contraseña debe tener al menos 8 caracteres.');
+        return;
+    }
+
     const data = [
         formData.get('nombre'), formData.get('apellido'), formData.get('dni'),
-        formData.get('direccion'), formData.get('email'), formData.get('contrasena')
+        formData.get('direccion'), formData.get('email'), contrasena
     ];
 
     try {
@@ -234,11 +240,13 @@ function modificarCantidad(delta) {
 }
 
 function irAButacas() {
+    const noche = document.getElementById('compra_noche') ? document.getElementById('compra_noche').value : 1;
     const cantidad = document.getElementById('compra_cantidad').value;
     const sector = document.getElementById('compra_sector').value;
     const publico = document.getElementById('compra_publico').value;
     
     localStorage.setItem('configCompra', JSON.stringify({
+        nocheId: parseInt(noche),
         cantidad: parseInt(cantidad),
         sectorId: sector,
         publicoId: publico
@@ -271,6 +279,29 @@ async function finalizarCompra() {
 
     try {
         const hoy = new Date().toISOString().split('T')[0];
+        
+        // 1. Obtener Precio
+        let id_precio = 1;
+        const resultPrecio = window.queryDB(
+            'SELECT id_precio FROM PRECIO WHERE id_noche = ? AND id_tipo = ? AND id_sector = ? LIMIT 1', 
+            [config.nocheId || 1, config.publicoId, config.sectorId]
+        );
+        if (resultPrecio && resultPrecio.length > 0) {
+            id_precio = resultPrecio[0].id_precio;
+        } else {
+            alert('No hay precio configurado para esta combinación. (Simulado: usando id_precio=1)');
+        }
+
+        // 2. Obtener Descuento
+        let id_descuento = null;
+        const resultDesc = window.queryDB(
+            'SELECT id_descuento FROM DESCUENTO WHERE fecha_limite >= ? ORDER BY porcentaje DESC LIMIT 1',
+            [hoy]
+        );
+        if (resultDesc && resultDesc.length > 0) {
+            id_descuento = resultDesc[0].id_descuento;
+        }
+
         const codigosGenerados = [];
 
         for (let i = 0; i < config.cantidad; i++) {
@@ -280,10 +311,14 @@ async function finalizarCompra() {
             const hashFactura = Math.random().toString(36).substring(2, 8).toUpperCase();
             const numero_factura = `FAC-0001-${hashFactura}`;
 
-            const id_precio = 1;
             const id_punto = 1;
             const id_butaca = Math.floor(Math.random() * 30) + 1;
-            // No hacemos el INSERT en la DB simulada para este campo nuevo para no romper sql.js antiguo, solo visual.
+            
+            window.queryDB(`
+                INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_descuento, id_tipo, id_punto, id_cliente, id_butaca, numero_factura)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [hoy, codigoBarra, id_precio, id_descuento, config.publicoId, id_punto, usuario.id_cliente || 1, id_butaca, numero_factura]);
+
             codigosGenerados.push({ codigoBarra, numero_factura });
         }
 
