@@ -54,7 +54,7 @@
             
             <div class="col-md-6">
                 <label class="form-label">DNI</label>
-                <input type="text" class="form-control-custom" id="dni" name="dni" required>
+                <input type="text" class="form-control-custom" id="dni" name="dni" required pattern="\d{8}" maxlength="8" minlength="8" title="Debe contener exactamente 8 números.">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Email</label>
@@ -72,7 +72,7 @@
 
             <div class="col-12">
                 <div class="form-check">
-                    <input class="form-check-input bg-dark border-secondary" type="checkbox" id="gridCheck">
+                    <input class="form-check-input bg-dark border-secondary" type="checkbox" id="gridCheck" required>
                     <label class="form-check-label text-light" for="gridCheck">
                         Check me out
                     </label>
