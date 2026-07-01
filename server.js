@@ -25,11 +25,13 @@ const adminAuth = require('./middleware/adminAuth');
 
 app.get('/api/noches', festivalController.getNoches);
 app.get('/api/noches/:id/grupos', festivalController.getDetalleNoche);
+app.get('/api/precio', festivalController.getPrecio);
 app.post('/api/clientes/registro', clienteController.registrarCliente);
 app.post('/api/login', clienteController.iniciarSesion);
 app.post('/api/login/verificar', clienteController.verificarLogin);
 app.get('/api/clientes/:id/entradas', authMiddleware, clienteController.getMisEntradas);
 app.post('/api/entradas/comprar', authMiddleware, entradaController.comprarEntradas);
+app.get('/api/entradas/ocupadas', entradaController.getOcupadas);
 app.post('/api/admin/noches', authMiddleware, adminAuth, adminController.crearNoche);
 app.put('/api/admin/noches/:id', authMiddleware, adminAuth, adminController.editarNoche);
 app.delete('/api/admin/noches/:id', authMiddleware, adminAuth, adminController.borrarNoche);

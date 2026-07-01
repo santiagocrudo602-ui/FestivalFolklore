@@ -18,32 +18,42 @@
             margin: 0 auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .butaca {
-            width: 32px;
-            height: 32px;
-            background-color: #888;
-            margin: 5px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: inline-block;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .butaca.selected {
-            background-color: #ff80df; /* Color rosado como en el mockup */
-        }
-        .butaca:hover {
-            background-color: #aaa;
-            transform: scale(1.1);
-        }
-        .butaca.selected:hover {
-            background-color: #ff99e6;
-        }
         .butacas-grid {
             display: flex;
             flex-wrap: wrap;
-            width: 340px; /* 8 columnas de (32+10 margin) = 336px aprox */
+            width: 440px; /* Ajustado para texto de butacas */
             margin: 0 auto;
             justify-content: center;
+        }
+        .butaca {
+            width: 38px;
+            height: 38px;
+            background-color: #888;
+            margin: 3px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .butaca.selected {
+            background-color: #ff80df;
+        }
+        .butaca.occupied {
+            background-color: #dc3545;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .butaca:not(.occupied):hover {
+            background-color: #aaa;
+            transform: scale(1.1);
+        }
+        .butaca.selected:not(.occupied):hover {
+            background-color: #ff99e6;
         }
         .info-bar {
             border-top: 1px solid #333;
@@ -97,20 +107,15 @@
 
     <div class="container mt-5 mb-5">
         <div class="butacas-container text-center">
-            <h4 class="fw-bold mb-2">Butacas disponibles</h4>
-            <p class="text-secondary mb-4" id="butacas-subtitle" style="font-size: 0.9rem;">Seleccione las butacas que desee</p>
+            <h4 class="fw-bold mb-2">Selección de Butacas</h4>
+            <p class="text-secondary mb-4" id="butacas-subtitle" style="font-size: 0.9rem;">Por favor, seleccione sus asientos para cada entrada</p>
             
-            <div class="butacas-grid" id="butacasGrid">
-                <!-- Se generan 30 butacas (para coincidir con el DUMP de la BD) -->
-                <script>
-                    for(let i=0; i<30; i++) {
-                        document.write(`<div class="butaca" data-id="${i+1}" onclick="toggleButaca(this)"></div>`);
-                    }
-                </script>
+            <div id="mapasContainer">
+                <!-- Los mapas se generan por JS -->
             </div>
             
             <div class="info-bar">
-                <span class="text-secondary fw-bold" style="font-size: 0.9rem;">Butacas seleccionadas</span>
+                <span class="text-secondary fw-bold" style="font-size: 0.9rem;">Asignación de butacas completada</span>
                 <span class="badge-cantidad" id="cantidadDisplay">0 / 0</span>
             </div>
             
@@ -122,37 +127,101 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/main.js"></script>
     <script>
-        let maxCantidad = 1;
+        let totalRequerido = 0;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const config = JSON.parse(localStorage.getItem('configCompra'));
-            if (config && config.cantidad) {
-                maxCantidad = config.cantidad;
-                document.getElementById('butacas-subtitle').textContent = `Seleccione un máximo de ${maxCantidad} butaca(s)`;
-                document.getElementById('cantidadDisplay').textContent = `0 / ${maxCantidad}`;
+        document.addEventListener('DOMContentLoaded', async () => {
+            carrito = JSON.parse(localStorage.getItem('configCompraCarrito'));
+            if (!carrito || carrito.length === 0) {
+                alert('No hay items en el carrito.');
+                window.location.href = '/';
+                return;
+            }
+
+            totalRequerido = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+            document.getElementById('cantidadDisplay').textContent = `0 / ${totalRequerido}`;
+
+            const container = document.getElementById('mapasContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < carrito.length; i++) {
+                const item = carrito[i];
+                
+                // Fetch ocupadas para este sector y noche
+                let ocupadas = [];
+                try {
+                    const response = await fetch(`/api/entradas/ocupadas?nocheId=${item.nocheId}&sectorId=${item.sectorId}`);
+                    const resJson = await response.json();
+                    if (resJson.success) {
+                        ocupadas = resJson.ocupadas;
+                    }
+                } catch (e) {
+                    console.error("Error fetching ocupadas", e);
+                }
+
+                const mapaDiv = document.createElement('div');
+                mapaDiv.className = 'mb-5 pb-3 border-bottom border-dark';
+                
+                const title = document.createElement('h5');
+                title.className = 'text-info mb-1';
+                title.textContent = `${item.nocheTexto} - ${item.sectorTexto}`;
+                
+                const subtitle = document.createElement('p');
+                subtitle.className = 'text-light small mb-3';
+                subtitle.innerHTML = `Asientos a elegir: <span class="fw-bold text-warning" id="req-mapa-${i}">0 / ${item.cantidad}</span>`;
+
+                const grid = document.createElement('div');
+                grid.className = 'butacas-grid';
+
+                for (let b = 1; b <= 30; b++) {
+                    const butaca = document.createElement('div');
+                    butaca.className = 'butaca';
+                    
+                    const fila = Math.floor((b - 1) / 10) + 1;
+                    const col = ((b - 1) % 10) + 1;
+                    butaca.textContent = `F${fila}-C${col}`;
+                    butaca.setAttribute('data-id', b);
+                    butaca.setAttribute('data-map-idx', i);
+                    
+                    if (ocupadas.includes(b)) {
+                        butaca.classList.add('occupied');
+                    } else {
+                        butaca.onclick = () => toggleButaca(butaca, i, item.cantidad);
+                    }
+                    
+                    grid.appendChild(butaca);
+                }
+
+                mapaDiv.appendChild(title);
+                mapaDiv.appendChild(subtitle);
+                mapaDiv.appendChild(grid);
+                container.appendChild(mapaDiv);
             }
         });
 
-        function toggleButaca(element) {
-            const seleccionadas = document.querySelectorAll('.butaca.selected').length;
-            
+        function toggleButaca(element, mapIdx, maxPorMapa) {
+            if (element.classList.contains('occupied')) return;
+
+            const seleccionadasEnEsteMapa = document.querySelectorAll(`.butaca.selected[data-map-idx="${mapIdx}"]`).length;
+
             if (!element.classList.contains('selected')) {
-                // Intentando seleccionar una nueva
-                if (seleccionadas >= maxCantidad) {
-                    alert(`Solo puedes seleccionar hasta ${maxCantidad} butacas, que es la cantidad que indicaste previamente.`);
+                if (seleccionadasEnEsteMapa >= maxPorMapa) {
+                    alert(`Solo puedes seleccionar ${maxPorMapa} butaca(s) para este ticket.`);
                     return;
                 }
                 element.classList.add('selected');
             } else {
-                // Deseleccionando
                 element.classList.remove('selected');
             }
-            actualizarCantidad();
+            
+            actualizarCantidad(mapIdx, maxPorMapa);
         }
 
-        function actualizarCantidad() {
-            const seleccionadas = document.querySelectorAll('.butaca.selected').length;
-            document.getElementById('cantidadDisplay').textContent = `${seleccionadas} / ${maxCantidad}`;
+        function actualizarCantidad(mapIdx, maxPorMapa) {
+            const seleccionadasTotal = document.querySelectorAll('.butaca.selected').length;
+            document.getElementById('cantidadDisplay').textContent = `${seleccionadasTotal} / ${totalRequerido}`;
+            
+            const seleccionadasEnEsteMapa = document.querySelectorAll(`.butaca.selected[data-map-idx="${mapIdx}"]`).length;
+            document.getElementById(`req-mapa-${mapIdx}`).textContent = `${seleccionadasEnEsteMapa} / ${maxPorMapa}`;
         }
     </script>
 </body>

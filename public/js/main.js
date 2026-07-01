@@ -141,6 +141,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const verifyForm = document.getElementById('verifyForm');
     if (verifyForm) verifyForm.addEventListener('submit', verificarCodigo);
+
+    // Event listeners para calcular precio en el modal de compra
+    const selectsCompra = ['compra_noche', 'compra_publico', 'compra_sector'];
+    selectsCompra.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', calcularPrecioModal);
+    });
+
+    // Calcular precio inicial si el modal se abre (opcional)
+    const modalCompra = document.getElementById('modalCompra');
+    if (modalCompra) {
+        modalCompra.addEventListener('shown.bs.modal', calcularPrecioModal);
+    }
 });
 
 // Función para cargar noches desde la Base de Datos
@@ -274,22 +287,116 @@ function modificarCantidad(delta) {
     input.value = value;
 }
 
-// Guardar intencion de compra y redirigir
+let carrito = [];
+
+async function agregarAlCarrito() {
+    const noche = document.getElementById('compra_noche');
+    const publico = document.getElementById('compra_publico');
+    const sector = document.getElementById('compra_sector');
+    const cantidad = document.getElementById('compra_cantidad');
+    
+    const nocheId = noche.value;
+    const publicoId = publico.value;
+    const sectorId = sector.value;
+    const cant = parseInt(cantidad.value || 1);
+
+    try {
+        const response = await fetch(`/api/precio?nocheId=${nocheId}&sectorId=${sectorId}&publicoId=${publicoId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const item = {
+                id: Date.now(),
+                nocheId,
+                publicoId,
+                sectorId,
+                nocheTexto: noche.options[noche.selectedIndex].text,
+                publicoTexto: publico.options[publico.selectedIndex].text,
+                sectorTexto: sector.options[sector.selectedIndex].text,
+                cantidad: cant,
+                precioUnitario: result.precio,
+                subtotal: result.precio * cant
+            };
+            
+            carrito.push(item);
+            actualizarTablaCarrito();
+        } else {
+            alert('Precio no disponible para esta combinación.');
+        }
+    } catch (error) {
+        console.error('Error al agregar al carrito:', error);
+        alert('Hubo un error al consultar el precio.');
+    }
+}
+
+function eliminarDelCarrito(id) {
+    carrito = carrito.filter(item => item.id !== id);
+    actualizarTablaCarrito();
+}
+
+function actualizarTablaCarrito() {
+    const container = document.getElementById('carrito_container');
+    const tbody = document.getElementById('carrito_body');
+    const totalDisplay = document.getElementById('carrito_total_display');
+    const btnButacas = document.getElementById('btn_ver_butacas');
+    
+    if (!container || !tbody) return;
+
+    if (carrito.length === 0) {
+        container.style.display = 'none';
+        btnButacas.disabled = true;
+        btnButacas.textContent = 'Elegir Butacas (0)';
+        return;
+    }
+
+    container.style.display = 'block';
+    tbody.innerHTML = '';
+    
+    let total = 0;
+    let cantEntradas = 0;
+
+    carrito.forEach(item => {
+        total += item.subtotal;
+        cantEntradas += item.cantidad;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <strong>${item.nocheTexto}</strong><br>
+                <small class="text-secondary">${item.publicoTexto} - ${item.sectorTexto}</small>
+            </td>
+            <td>${item.cantidad} x $${item.precioUnitario}</td>
+            <td class="fw-bold">$${item.subtotal}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger py-0 px-2" onclick="eliminarDelCarrito(${item.id})">X</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    totalDisplay.textContent = `$${total}`;
+    btnButacas.disabled = false;
+    btnButacas.textContent = `Elegir Butacas (${cantEntradas})`;
+}
+
+// Sobrescribir evento al abrir modal para vaciar carrito (opcional) o mantenerlo
+document.addEventListener('DOMContentLoaded', () => {
+    const modalCompra = document.getElementById('modalCompra');
+    if (modalCompra) {
+        modalCompra.addEventListener('hidden.bs.modal', () => {
+            // carrito = []; // Descomentar si queremos limpiar al cerrar el modal
+            // actualizarTablaCarrito();
+        });
+    }
+});
+
 function irAButacas() {
-    const noche = document.getElementById('compra_noche') ? document.getElementById('compra_noche').value : 1;
-    const cantidad = document.getElementById('compra_cantidad').value;
-    const sector = document.getElementById('compra_sector').value;
-    const publico = document.getElementById('compra_publico').value;
+    if (carrito.length === 0) {
+        alert("El carrito está vacío.");
+        return;
+    }
     
-    // Guardamos la configuración en localStorage
-    localStorage.setItem('configCompra', JSON.stringify({
-        nocheId: parseInt(noche),
-        cantidad: parseInt(cantidad),
-        sectorId: sector,
-        publicoId: publico
-    }));
-    
-    // Redirigir a butacas
+    localStorage.setItem('configCompraCarrito', JSON.stringify(carrito));
     window.location.href = '/butacas';
 }
 
@@ -303,28 +410,27 @@ async function finalizarCompra() {
     }
     const usuario = JSON.parse(usuarioStr);
 
-    const config = JSON.parse(localStorage.getItem('configCompra'));
-    if (!config) {
-        alert('No hay una configuración de compra activa.');
+    const carritoGuardado = JSON.parse(localStorage.getItem('configCompraCarrito'));
+    if (!carritoGuardado || carritoGuardado.length === 0) {
+        alert('No hay un carrito de compras activo.');
         window.location.href = '/';
         return;
     }
 
+    const totalCantidad = carritoGuardado.reduce((sum, item) => sum + item.cantidad, 0);
     const seleccionadas = document.querySelectorAll('.butaca.selected');
-    if (seleccionadas.length !== config.cantidad) {
-        alert(`Debes seleccionar exactamente ${config.cantidad} butaca(s) antes de finalizar.`);
+    
+    if (seleccionadas.length !== totalCantidad) {
+        alert(`Debes seleccionar exactamente ${totalCantidad} butaca(s) antes de finalizar.`);
         return;
     }
     
     const butacasIds = Array.from(seleccionadas).map(el => parseInt(el.getAttribute('data-id')));
 
-    // id_cliente puede llamarse id o id_cliente dependiendo de cómo devuelve el login (asumimos id o id_cliente)
+    // Armar el payload para el backend con el array del carrito
     const data = {
         id_cliente: usuario.id_cliente || usuario.id, 
-        nocheId: config.nocheId,
-        cantidad: config.cantidad,
-        sectorId: config.sectorId,
-        publicoId: config.publicoId,
+        cartItems: carritoGuardado,
         butacasIds: butacasIds
     };
 
@@ -346,8 +452,8 @@ async function finalizarCompra() {
             ).join('\n');
             alert(`¡Entradas reservadas con éxito!\n\nCódigos Generados:\n${codigosStr}\n\nSerás redirigido a la plataforma de pago de terceros...`);
             
-            // Limpiar config y volver al inicio (simulando que fuimos al tercero)
-            localStorage.removeItem('configCompra');
+            // Limpiar config y volver al inicio
+            localStorage.removeItem('configCompraCarrito');
             window.location.href = '/';
         } else {
             alert('Error en la compra: ' + result.message);

@@ -21,6 +21,11 @@ const FestivalModel = {
         `;
         const [rows] = await db.query(query, [id_noche]);
         return rows;
+    },
+    getPrecioUnitario: async (id_noche, id_sector, id_tipo) => {
+        const query = 'SELECT monto FROM PRECIO WHERE id_noche = ? AND id_sector = ? AND id_tipo = ? LIMIT 1';
+        const [rows] = await db.query(query, [id_noche, id_sector, id_tipo]);
+        return rows.length > 0 ? rows[0].monto : null;
     }
 };
 

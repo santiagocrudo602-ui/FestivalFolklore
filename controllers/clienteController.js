@@ -26,8 +26,16 @@ exports.registrarCliente = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Faltan campos obligatorios.' });
         }
 
-        if (contrasena.length < 8) {
-            return res.status(400).json({ success: false, message: 'La contraseña debe tener al menos 8 caracteres.' });
+        // Validación de DNI: Solo números y exactamente 8 dígitos
+        const dniRegex = /^\d{8}$/;
+        if (!dniRegex.test(dni)) {
+            return res.status(400).json({ success: false, message: 'El DNI debe contener exactamente 8 números.' });
+        }
+
+        // Validación de fortaleza de contraseña: al menos 8 caracteres, 1 letra y 1 número
+        const pwdRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        if (!pwdRegex.test(contrasena)) {
+            return res.status(400).json({ success: false, message: 'La contraseña debe tener al menos 8 caracteres, incluyendo una letra y un número.' });
         }
 
         // Verificar si el email ya existe

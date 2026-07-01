@@ -99,9 +99,34 @@
                         <button type="button" class="btn btn-dark border border-secondary px-3" style="background-color: #111;" onclick="modificarCantidad(1)">+</button>
                     </div>
                 </div>
+            <div class="text-center mt-3">
+                <button type="button" onclick="agregarAlCarrito()" class="btn btn-warning fw-bold px-4 py-2 text-dark" style="border: none;">Agregar al Carrito</button>
+            </div>
+            <div id="carrito_container" class="mt-4 mx-auto" style="display: none; max-width: 95%;">
+                <h6 class="text-start text-secondary mb-2">Tickets seleccionados:</h6>
+                <table class="table table-dark table-bordered text-center mb-0" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th scope="col">Detalle</th>
+                            <th scope="col">Cant.</th>
+                            <th scope="col">Subtotal</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="carrito_body">
+                        <!-- Items dinámicos -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2" class="text-end text-light">Total:</th>
+                            <th id="carrito_total_display" class="text-success fw-bold fs-5">$0</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
             <div class="text-center mt-4">
-                <button type="button" onclick="irAButacas()" class="btn btn-info w-50 py-2 text-white fw-bold" style="background-color: #2b99ff; border: none;">Ver butacas</button>
+                <button type="button" onclick="irAButacas()" id="btn_ver_butacas" class="btn btn-info w-50 py-2 text-white fw-bold" style="background-color: #2b99ff; border: none;" disabled>Elegir Butacas (0)</button>
             </div>
           </div>
           <div class="modal-footer border-0 justify-content-end">
