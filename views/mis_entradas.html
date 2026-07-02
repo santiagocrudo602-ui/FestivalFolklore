@@ -48,6 +48,13 @@
                     <tbody id="tabla-entradas">
                         <!-- Las entradas se cargarán aquí dinámicamente -->
                     </tbody>
+                    <tfoot id="tabla-footer" class="d-none">
+                        <tr>
+                            <th colspan="5" class="text-end text-light fs-6">Total Acumulado:</th>
+                            <th id="total-acumulado" class="text-success fw-bold fs-5">$0.00</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
             <div id="no-entradas" class="alert alert-info d-none mt-3">
@@ -91,11 +98,14 @@
                 if (!result || result.length === 0) {
                     noEntradas.classList.remove('d-none');
                 } else {
+                    let sumaTotal = 0;
                     result.forEach(entrada => {
                         const tr = document.createElement('tr');
                         const precioBase = parseFloat(entrada.precio_base) || 0;
                         const descPorcentaje = parseFloat(entrada.descuento) || 0;
                         const total = precioBase - (precioBase * (descPorcentaje / 100));
+                        
+                        sumaTotal += total;
 
                         tr.innerHTML = `
                             <td><strong class="text-info">${entrada.codigoBarra}</strong></td>
@@ -108,6 +118,9 @@
                         `;
                         tbody.appendChild(tr);
                     });
+                    
+                    document.getElementById('total-acumulado').textContent = `$${sumaTotal.toFixed(2)}`;
+                    document.getElementById('tabla-footer').classList.remove('d-none');
                 }
             } catch (error) {
                 console.error('Error:', error);

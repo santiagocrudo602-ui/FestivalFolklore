@@ -1,19 +1,14 @@
 console.log('Frontend script loaded successfully');
 
-// Protección de rutas global
+// Protección de rutas global (Solo se protege /butacas)
 const currentPath = window.location.pathname;
 const usuarioLogueado = localStorage.getItem('usuario');
 
-if (!usuarioLogueado && currentPath.includes('butacas.html')) {
-    window.location.href = 'login.html';
+if (!usuarioLogueado && currentPath === '/butacas') {
+    window.location.href = '/login';
 }
 
-function generarIdUnico() {
-    return Math.floor(Math.random() * 1000000);
-}
-
-document.addEventListener('db_ready', () => {
-    console.log("DB Ready Event Fired - Inicializando UI");
+document.addEventListener('DOMContentLoaded', () => {
     actualizarNavbar();
 
     // 1. Lógica para la vista de Noches
@@ -33,23 +28,12 @@ document.addEventListener('db_ready', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', iniciarSesion);
     }
-
-    const verifyForm = document.getElementById('verifyForm');
-    if (verifyForm) {
-        verifyForm.addEventListener('submit', verificarCodigo);
-    }
-
-    // 4. Lógica para el Detalle de Noche
-    if (window.location.pathname.includes('noche_detalle')) {
-        cargarDetalleNoche();
-    }
 });
 
 function actualizarNavbar() {
     const navbarMsAuto = document.querySelector('.navbar-nav.ms-auto');
     if (navbarMsAuto && usuarioLogueado) {
         const usuario = JSON.parse(usuarioLogueado);
-        const depth = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') ? 'views/' : '';
         navbarMsAuto.innerHTML = `
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle fw-bold text-info" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -57,7 +41,7 @@ function actualizarNavbar() {
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="navbarDropdown">
                     <li><h6 class="dropdown-header">${usuario.nombre} ${usuario.apellido}</h6></li>
-                    <li><a class="dropdown-item" href="${depth}mis_entradas.html">Mis Entradas</a></li>
+                    <li><a class="dropdown-item" href="/mis-entradas">Mis Entradas</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">Cerrar sesión</a></li>
                 </ul>
@@ -68,55 +52,121 @@ function actualizarNavbar() {
 
 function cerrarSesion() {
     localStorage.removeItem('usuario');
-    const depth = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') ? 'views/' : '';
-    window.location.href = depth + 'login.html';
+    window.location.href = '/login';
 }
 
-let tempUsuario = null;
+let tempEmail = '';
 
 async function iniciarSesion(event) {
     event.preventDefault();
-    
-    const email = document.getElementById('login_email').value;
-    const contrasena = document.getElementById('login_password').value;
+
+    const data = {
+        email: document.getElementById('login_email').value,
+        contrasena: document.getElementById('login_password').value
+    };
 
     try {
-        const rows = window.queryDB('SELECT * FROM CLIENTE WHERE email = ? AND contrasena = ?', [email, contrasena]);
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
         
-        if (rows.length > 0) {
-            tempUsuario = rows[0];
-            delete tempUsuario.contrasena;
+        const result = await response.json();
+        
+        if (result.success && result.require2FA) {
+            tempEmail = result.email;
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('verifyForm').style.display = 'block';
+        } else if (result.success) {
+            localStorage.setItem('usuario', JSON.stringify(result.data));
+            localStorage.setItem('token', result.token);
+            window.location.href = '/';
         } else {
-            alert('Error: Credenciales inválidas.');
+            alert('Error: ' + result.message);
         }
     } catch (error) {
         console.error('Error iniciando sesión:', error);
-        alert('Error local ejecutando consulta.');
+        alert('Error de conexión.');
     }
 }
 
-function verificarCodigo(event) {
+async function verificarCodigo(event) {
     event.preventDefault();
-    const codigo = document.getElementById('verify_code').value;
-    if (codigo.length === 6) {
-        localStorage.setItem('usuario', JSON.stringify(tempUsuario));
-        const depth = window.location.pathname.includes('views') ? '../' : '';
-        window.location.href = depth + 'index.html';
-    } else {
-        alert('Ingresa un código de 6 dígitos válido.');
+
+    const data = {
+        email: tempEmail,
+        codigo: document.getElementById('verify_code').value
+    };
+
+    try {
+        const response = await fetch('/api/login/verificar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            localStorage.setItem('usuario', JSON.stringify(result.data));
+            localStorage.setItem('token', result.token);
+            window.location.href = '/';
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error verificando:', error);
+        alert('Error de conexión.');
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarNavbar();
+
+    // 1. Lógica para la vista de Noches
+    const nochesContainer = document.getElementById('noches-container');
+    if (nochesContainer) {
+        cargarNoches(nochesContainer);
+    }
+
+    // 2. Lógica para el Registro
+    const registroForm = document.getElementById('registroForm');
+    if (registroForm) {
+        registroForm.addEventListener('submit', registrarCliente);
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.addEventListener('submit', iniciarSesion);
+
+    const verifyForm = document.getElementById('verifyForm');
+    if (verifyForm) verifyForm.addEventListener('submit', verificarCodigo);
+
+    // Event listeners para calcular precio en el modal de compra
+    const selectsCompra = ['compra_noche', 'compra_publico', 'compra_sector'];
+    selectsCompra.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', calcularPrecioModal);
+    });
+
+    // Calcular precio inicial si el modal se abre (opcional)
+    const modalCompra = document.getElementById('modalCompra');
+    if (modalCompra) {
+        modalCompra.addEventListener('shown.bs.modal', calcularPrecioModal);
+    }
+});
+
+// Función para cargar noches desde la Base de Datos
 async function cargarNoches(container) {
     try {
-        const rows = window.queryDB('SELECT * FROM NOCHE ORDER BY fecha ASC');
-        if (rows.length > 0) {
-            container.innerHTML = '';
-            rows.forEach(noche => {
-                const fechaStr = noche.fecha ? noche.fecha.toString() : '';
-                const fecha = new Date(fechaStr).toLocaleDateString('es-ES');
+        const response = await fetch('/api/noches');
+        const result = await response.json();
+
+        if (result.success) {
+            container.innerHTML = ''; // Limpiar estático
+            result.data.forEach(noche => {
+                // Formatear fecha (ej: YYYY-MM-DD -> DD/MM/YYYY)
+                const fecha = new Date(noche.fecha).toLocaleDateString('es-ES');
                 
                 const col = document.createElement('div');
                 col.className = 'col-md-4 mb-4';
@@ -131,81 +181,89 @@ async function cargarNoches(container) {
                 container.appendChild(col);
             });
         } else {
-            container.innerHTML = '<p class="text-warning">No hay noches cargadas en la BD estática.</p>';
+            container.innerHTML = '<p class="text-danger">Error al cargar las noches.</p>';
         }
     } catch (error) {
         console.error('Error fetching noches:', error);
-        container.innerHTML = '<p class="text-danger">Error consultando SQLite local.</p>';
+        container.innerHTML = '<p class="text-danger">Error de conexión con el servidor.</p>';
     }
 }
 
+// Función para redirigir al detalle de la noche guardando info en localStorage
 function verDetalleNoche(id_noche, numero, fecha) {
     localStorage.setItem('nocheActual', JSON.stringify({ id_noche, numero, fecha }));
-    const depth = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') ? 'views/' : '';
-    window.location.href = depth + 'noche_detalle.html';
+    window.location.href = '/noche_detalle';
 }
 
-async function cargarDetalleNoche() {
-    const nocheInfo = JSON.parse(localStorage.getItem('nocheActual'));
-    if (nocheInfo) {
-        document.getElementById('noche-titulo').textContent = `Noche ${nocheInfo.numero}`;
-        document.getElementById('noche-fecha').textContent = nocheInfo.fecha;
+// 3. Lógica para la vista de Detalle de Noche
+// Si estamos en noche_detalle.html, cargar información de localStorage
+if (window.location.pathname.includes('noche_detalle')) {
+    document.addEventListener('DOMContentLoaded', async () => {
+        const nocheInfo = JSON.parse(localStorage.getItem('nocheActual'));
+        if (nocheInfo) {
+            document.getElementById('noche-titulo').textContent = `Noche ${nocheInfo.numero}`;
+            document.getElementById('noche-fecha').textContent = nocheInfo.fecha;
 
-        try {
-            const query = `
-                SELECT g.id_grupo, g.nombre, g.horario 
-                FROM GRUPO g
-                JOIN NOCHE_GRUPO ng ON g.id_grupo = ng.id_grupo
-                WHERE ng.id_noche = ?
-                ORDER BY g.horario ASC
-            `;
-            const grupos = window.queryDB(query, [nocheInfo.id_noche]);
-            
-            const descContainer = document.getElementById('noche-descripcion');
-            if (grupos.length > 0) {
-                let html = '<ul class="list-unstyled mt-3">';
-                grupos.forEach(grupo => {
-                    html += `<li><strong class="text-info">${grupo.horario} hs</strong> - ${grupo.nombre}</li>`;
-                });
-                html += '</ul>';
-                descContainer.innerHTML = html;
-            } else {
-                descContainer.innerHTML = '<p>No hay artistas confirmados para esta noche aún.</p>';
+            // Fetch a la BD para traer artistas
+            try {
+                const res = await fetch(`/api/noches/${nocheInfo.id_noche}/grupos`);
+                const result = await res.json();
+                
+                const descContainer = document.getElementById('noche-descripcion');
+                if (result.success && result.data.length > 0) {
+                    let html = '<ul class="list-unstyled mt-3">';
+                    result.data.forEach(grupo => {
+                        html += `<li><strong class="text-info">${grupo.horario} hs</strong> - ${grupo.nombre}</li>`;
+                    });
+                    html += '</ul>';
+                    descContainer.innerHTML = html;
+                } else {
+                    descContainer.innerHTML = '<p>No hay artistas confirmados para esta noche aún.</p>';
+                }
+            } catch (error) {
+                console.error("Error al traer grupos:", error);
             }
-        } catch (error) {
-            console.error("Error al traer grupos:", error);
         }
-    }
+    });
 }
 
+// Función para manejar el registro de cliente
 async function registrarCliente(event) {
     event.preventDefault();
+    
     const formData = new FormData(event.target);
-    const contrasena = formData.get('contrasena');
-    if (contrasena.length < 8) {
-        alert('La contraseña debe tener al menos 8 caracteres.');
-        return;
-    }
-
-    const data = [
-        formData.get('nombre'), formData.get('apellido'), formData.get('dni'),
-        formData.get('direccion'), formData.get('email'), contrasena
-    ];
+    const data = {
+        nombre: formData.get('nombre'),
+        apellido: formData.get('apellido'),
+        dni: formData.get('dni'),
+        direccion: formData.get('direccion'),
+        email: formData.get('email'),
+        contrasena: formData.get('contrasena')
+    };
 
     try {
-        const query = `
-            INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
-        window.queryDB(query, data);
-        alert('¡Registro exitoso! (Aviso: como estás en GitHub Pages, los datos se borrarán al recargar)');
-        window.location.href = 'login.html';
+        const response = await fetch('/api/clientes/registro', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+            window.location.href = '/login';
+        } else {
+            alert('Error: ' + result.message);
+        }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al registrarse. DNI o Email pueden estar duplicados.');
+        alert('Ocurrió un error al registrarse.');
     }
 }
 
+// Función para seleccionar butacas (ya usada en butacas.html)
 function toggleButaca(element) {
     element.classList.toggle('selected');
     actualizarCantidad();
@@ -214,20 +272,10 @@ function toggleButaca(element) {
 function actualizarCantidad() {
     const seleccionadas = document.querySelectorAll('.butaca.selected').length;
     const countEl = document.getElementById('cantidadDisplay');
-    const configStr = localStorage.getItem('configCompra');
-    let max = 0;
-    if (configStr) {
-        max = JSON.parse(configStr).cantidad;
-    }
-    if(countEl) countEl.textContent = `${seleccionadas} / ${max}`;
-
-    if (seleccionadas > max) {
-        alert(`Has alcanzado el límite de ${max} butaca(s) seleccionadas.`);
-        document.querySelectorAll('.butaca.selected')[seleccionadas - 1].classList.remove('selected');
-        countEl.textContent = `${max} / ${max}`;
-    }
+    if(countEl) countEl.textContent = seleccionadas;
 }
 
+// Modificar cantidad en el modal de compra
 function modificarCantidad(delta) {
     const input = document.getElementById('compra_cantidad');
     if (!input) return;
@@ -235,91 +283,185 @@ function modificarCantidad(delta) {
     let value = parseInt(input.value) || 1;
     value += delta;
     if (value < 1) value = 1;
-    if (value > 10) value = 10;
+    if (value > 10) value = 10; // Limite arbitrario de 10 entradas
     input.value = value;
 }
 
-function irAButacas() {
-    const noche = document.getElementById('compra_noche') ? document.getElementById('compra_noche').value : 1;
-    const cantidad = document.getElementById('compra_cantidad').value;
-    const sector = document.getElementById('compra_sector').value;
-    const publico = document.getElementById('compra_publico').value;
+let carrito = [];
+
+async function agregarAlCarrito() {
+    const noche = document.getElementById('compra_noche');
+    const publico = document.getElementById('compra_publico');
+    const sector = document.getElementById('compra_sector');
+    const cantidad = document.getElementById('compra_cantidad');
     
-    localStorage.setItem('configCompra', JSON.stringify({
-        nocheId: parseInt(noche),
-        cantidad: parseInt(cantidad),
-        sectorId: sector,
-        publicoId: publico
-    }));
-    
-    const depth = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') ? 'views/' : '';
-    window.location.href = depth + 'butacas.html';
+    const nocheId = noche.value;
+    const publicoId = publico.value;
+    const sectorId = sector.value;
+    const cant = parseInt(cantidad.value || 1);
+
+    try {
+        const query = `
+            SELECT p.precio_base 
+            FROM PRECIO p 
+            WHERE p.id_noche = ${nocheId} AND p.id_sector = ${sectorId} AND p.id_tipo = ${publicoId}
+            LIMIT 1
+        `;
+        const resPrecio = window.queryDB(query);
+        
+        if (resPrecio && resPrecio.length > 0 && resPrecio[0].values.length > 0) {
+            const precio = resPrecio[0].values[0][0];
+            const item = {
+                id: Date.now(),
+                nocheId,
+                publicoId,
+                sectorId,
+                nocheTexto: noche.options[noche.selectedIndex].text,
+                publicoTexto: publico.options[publico.selectedIndex].text,
+                sectorTexto: sector.options[sector.selectedIndex].text,
+                cantidad: cant,
+                precioUnitario: precio,
+                subtotal: precio * cant
+            };
+            
+            carrito.push(item);
+            actualizarTablaCarrito();
+        } else {
+            alert('Precio no disponible para esta combinación.');
+        }
+    } catch (error) {
+        console.error('Error al agregar al carrito:', error);
+        alert('Hubo un error al consultar el precio.');
+    }
 }
 
+function eliminarDelCarrito(id) {
+    carrito = carrito.filter(item => item.id !== id);
+    actualizarTablaCarrito();
+}
+
+function actualizarTablaCarrito() {
+    const container = document.getElementById('carrito_container');
+    const tbody = document.getElementById('carrito_body');
+    const totalDisplay = document.getElementById('carrito_total_display');
+    const btnButacas = document.getElementById('btn_ver_butacas');
+    
+    if (!container || !tbody) return;
+
+    if (carrito.length === 0) {
+        container.style.display = 'none';
+        btnButacas.disabled = true;
+        btnButacas.textContent = 'Elegir Butacas (0)';
+        return;
+    }
+
+    container.style.display = 'block';
+    tbody.innerHTML = '';
+    
+    let total = 0;
+    let cantEntradas = 0;
+
+    carrito.forEach(item => {
+        total += item.subtotal;
+        cantEntradas += item.cantidad;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <strong>${item.nocheTexto}</strong><br>
+                <small class="text-secondary">${item.publicoTexto} - ${item.sectorTexto}</small>
+            </td>
+            <td>${item.cantidad} x $${item.precioUnitario}</td>
+            <td class="fw-bold">$${item.subtotal}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger py-0 px-2" onclick="eliminarDelCarrito(${item.id})">X</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    totalDisplay.textContent = `$${total}`;
+    btnButacas.disabled = false;
+    btnButacas.textContent = `Elegir Butacas (${cantEntradas})`;
+}
+
+// Sobrescribir evento al abrir modal para vaciar carrito (opcional) o mantenerlo
+document.addEventListener('DOMContentLoaded', () => {
+    const modalCompra = document.getElementById('modalCompra');
+    if (modalCompra) {
+        modalCompra.addEventListener('hidden.bs.modal', () => {
+            // carrito = []; // Descomentar si queremos limpiar al cerrar el modal
+            // actualizarTablaCarrito();
+        });
+    }
+});
+
+function irAButacas() {
+    if (carrito.length === 0) {
+        alert("El carrito está vacío.");
+        return;
+    }
+    
+    localStorage.setItem('configCompraCarrito', JSON.stringify(carrito));
+    window.location.href = '/butacas';
+}
+
+// Finalizar la compra y pedir codigos de barra al backend
 async function finalizarCompra() {
     const usuarioStr = localStorage.getItem('usuario');
     if (!usuarioStr) {
         alert('Debes iniciar sesión para comprar entradas.');
-        window.location.href = 'login.html';
+        window.location.href = '/login';
         return;
     }
     const usuario = JSON.parse(usuarioStr);
-    const config = JSON.parse(localStorage.getItem('configCompra'));
-    if (!config) {
-        alert('No hay una configuración de compra activa.');
-        window.location.href = '../index.html';
-        return;
-    }
 
-    const seleccionadas = document.querySelectorAll('.butaca.selected').length;
-    if (seleccionadas !== config.cantidad) {
-        alert(`Debes seleccionar exactamente ${config.cantidad} butaca(s) antes de finalizar.`);
-        return;
-    }
-
+    const carritoGuardado = JSON.parse(localStorage.getItem('configCompraCarrito'));
+    if (!carritoGuardado || carritoGuardado.length === 0) {
     try {
         const hoy = new Date().toISOString().split('T')[0];
         
-        // 1. Obtener Precio
-        let id_precio = 1;
-        const resultPrecio = window.queryDB(
-            'SELECT id_precio FROM PRECIO WHERE id_noche = ? AND id_tipo = ? AND id_sector = ? LIMIT 1', 
-            [config.nocheId || 1, config.publicoId, config.sectorId]
-        );
-        if (resultPrecio && resultPrecio.length > 0) {
-            id_precio = resultPrecio[0].id_precio;
-        } else {
-            alert('No hay precio configurado para esta combinación. (Simulado: usando id_precio=1)');
-        }
-
-        // 2. Obtener Descuento
+        // Obtener Descuento
         let id_descuento = null;
         const resultDesc = window.queryDB(
             'SELECT id_descuento FROM DESCUENTO WHERE fecha_limite >= ? ORDER BY porcentaje DESC LIMIT 1',
             [hoy]
         );
-        if (resultDesc && resultDesc.length > 0) {
-            id_descuento = resultDesc[0].id_descuento;
+        if (resultDesc && resultDesc.length > 0 && resultDesc[0].values.length > 0) {
+            id_descuento = resultDesc[0].values[0][0];
         }
 
         const codigosGenerados = [];
+        let butacaIndex = 0;
 
-        for (let i = 0; i < config.cantidad; i++) {
-            const hash = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const codigoBarra = `FEST-2026-${hash}`;
-            
-            const hashFactura = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const numero_factura = `FAC-0001-${hashFactura}`;
+        for (const item of carrito) {
+            let id_precio = 1;
+            const resultPrecio = window.queryDB(
+                'SELECT id_precio FROM PRECIO WHERE id_noche = ? AND id_tipo = ? AND id_sector = ? LIMIT 1', 
+                [item.nocheId || 1, item.publicoId, item.sectorId]
+            );
+            if (resultPrecio && resultPrecio.length > 0 && resultPrecio[0].values.length > 0) {
+                id_precio = resultPrecio[0].values[0][0];
+            }
 
-            const id_punto = 1;
-            const id_butaca = Math.floor(Math.random() * 30) + 1;
-            
-            window.queryDB(`
-                INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_descuento, id_tipo, id_punto, id_cliente, id_butaca, numero_factura)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `, [hoy, codigoBarra, id_precio, id_descuento, config.publicoId, id_punto, usuario.id_cliente || 1, id_butaca, numero_factura]);
+            for (let i = 0; i < item.cantidad; i++) {
+                const hash = Math.random().toString(36).substring(2, 8).toUpperCase();
+                const codigoBarra = `FEST-2026-${hash}`;
+                
+                const hashFactura = Math.random().toString(36).substring(2, 8).toUpperCase();
+                const numero_factura = `FAC-0001-${hashFactura}`;
 
-            codigosGenerados.push({ codigoBarra, numero_factura });
+                const id_punto = 1;
+                const id_butaca = butacasIds[butacaIndex];
+                butacaIndex++;
+                
+                window.queryDB(`
+                    INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_descuento, id_tipo, id_punto, id_cliente, id_butaca, numero_factura)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [hoy, codigoBarra, id_precio, id_descuento, item.publicoId, id_punto, usuario.id_cliente || 1, id_butaca, numero_factura]);
+
+                codigosGenerados.push({ codigoBarra, numero_factura });
+            }
         }
 
         const codigosStr = codigosGenerados.map(c => 
@@ -328,7 +470,7 @@ async function finalizarCompra() {
         
         alert(`¡Entradas reservadas con éxito!\n\nCódigos Generados:\n${codigosStr}\n\n(Nota: La reserva es temporal debido al modo estático en GitHub Pages).`);
         
-        localStorage.removeItem('configCompra');
+        localStorage.removeItem('configCompraCarrito');
         window.location.href = '../index.html';
     } catch (error) {
         console.error('Error al comprar:', error);
