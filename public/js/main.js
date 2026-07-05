@@ -5,7 +5,7 @@ const currentPath = window.location.pathname;
 const usuarioLogueado = localStorage.getItem('usuario');
 
 if (!usuarioLogueado && currentPath === '/butacas') {
-    window.location.href = '/login';
+    window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,6 +34,7 @@ function actualizarNavbar() {
     const navbarMsAuto = document.querySelector('.navbar-nav.ms-auto');
     if (navbarMsAuto && usuarioLogueado) {
         const usuario = JSON.parse(usuarioLogueado);
+        const depth = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') ? 'views/' : '';
         navbarMsAuto.innerHTML = `
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle fw-bold text-info" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -41,7 +42,7 @@ function actualizarNavbar() {
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="navbarDropdown">
                     <li><h6 class="dropdown-header">${usuario.nombre} ${usuario.apellido}</h6></li>
-                    <li><a class="dropdown-item" href="/mis-entradas">Mis Entradas</a></li>
+                    <li><a class="dropdown-item" href="${depth}mis_entradas.html">Mis Entradas</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">Cerrar sesión</a></li>
                 </ul>
@@ -52,7 +53,7 @@ function actualizarNavbar() {
 
 function cerrarSesion() {
     localStorage.removeItem('usuario');
-    window.location.href = '/login';
+    window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
 }
 
 let tempEmail = '';
@@ -81,7 +82,7 @@ async function iniciarSesion(event) {
         } else if (result.success) {
             localStorage.setItem('usuario', JSON.stringify(result.data));
             localStorage.setItem('token', result.token);
-            window.location.href = '/';
+            window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'index.html' : '../index.html';
         } else {
             alert('Error: ' + result.message);
         }
@@ -111,7 +112,7 @@ async function verificarCodigo(event) {
         if (result.success) {
             localStorage.setItem('usuario', JSON.stringify(result.data));
             localStorage.setItem('token', result.token);
-            window.location.href = '/';
+            window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'index.html' : '../index.html';
         } else {
             alert('Error: ' + result.message);
         }
@@ -192,7 +193,7 @@ async function cargarNoches(container) {
 // Función para redirigir al detalle de la noche guardando info en localStorage
 function verDetalleNoche(id_noche, numero, fecha) {
     localStorage.setItem('nocheActual', JSON.stringify({ id_noche, numero, fecha }));
-    window.location.href = '/noche_detalle';
+    window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/noche_detalle.html' : 'noche_detalle.html';
 }
 
 // 3. Lógica para la vista de Detalle de Noche
@@ -253,7 +254,7 @@ async function registrarCliente(event) {
         const result = await response.json();
         if (result.success) {
             alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
-            window.location.href = '/login';
+            window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
         } else {
             alert('Error: ' + result.message);
         }
@@ -397,7 +398,7 @@ function irAButacas() {
     }
     
     localStorage.setItem('configCompraCarrito', JSON.stringify(carrito));
-    window.location.href = '/butacas';
+    window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/butacas.html' : 'butacas.html';
 }
 
 // Finalizar la compra y pedir codigos de barra al backend
@@ -405,7 +406,7 @@ async function finalizarCompra() {
     const usuarioStr = localStorage.getItem('usuario');
     if (!usuarioStr) {
         alert('Debes iniciar sesión para comprar entradas.');
-        window.location.href = '/login';
+        window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
         return;
     }
     const usuario = JSON.parse(usuarioStr);
@@ -413,7 +414,7 @@ async function finalizarCompra() {
     const carritoGuardado = JSON.parse(localStorage.getItem('configCompraCarrito'));
     if (!carritoGuardado || carritoGuardado.length === 0) {
         alert('No hay un carrito de compras activo.');
-        window.location.href = '/';
+        window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'index.html' : '../index.html';
         return;
     }
 
@@ -454,7 +455,7 @@ async function finalizarCompra() {
             
             // Limpiar config y volver al inicio
             localStorage.removeItem('configCompraCarrito');
-            window.location.href = '/';
+            window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'index.html' : '../index.html';
         } else {
             alert('Error en la compra: ' + result.message);
         }

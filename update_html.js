@@ -7,7 +7,8 @@ const files = [
     'views/noche_detalle.html',
     'views/butacas.html',
     'views/login.html',
-    'views/registro.html'
+    'views/registro.html',
+    'views/mis_entradas.html'
 ];
 
 files.forEach(file => {
