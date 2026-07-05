@@ -131,7 +131,7 @@
     <script>
         let totalRequerido = 0;
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('db_ready', async () => {
             carrito = JSON.parse(localStorage.getItem('configCompraCarrito'));
             if (!carrito || carrito.length === 0) {
                 alert('No hay items en el carrito.');

@@ -8,7 +8,7 @@ if (!usuarioLogueado && currentPath === '/butacas') {
     window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('db_ready', () => {
     actualizarNavbar();
 
     // 1. Lógica para la vista de Noches
@@ -122,7 +122,7 @@ async function verificarCodigo(event) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('db_ready', () => {
     actualizarNavbar();
 
     // 1. Lógica para la vista de Noches
@@ -142,19 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const verifyForm = document.getElementById('verifyForm');
     if (verifyForm) verifyForm.addEventListener('submit', verificarCodigo);
-
-    // Event listeners para calcular precio en el modal de compra
-    const selectsCompra = ['compra_noche', 'compra_publico', 'compra_sector'];
-    selectsCompra.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', calcularPrecioModal);
-    });
-
-    // Calcular precio inicial si el modal se abre (opcional)
-    const modalCompra = document.getElementById('modalCompra');
-    if (modalCompra) {
-        modalCompra.addEventListener('shown.bs.modal', calcularPrecioModal);
-    }
 });
 
 // Función para cargar noches desde la Base de Datos
@@ -199,7 +186,7 @@ function verDetalleNoche(id_noche, numero, fecha) {
 // 3. Lógica para la vista de Detalle de Noche
 // Si estamos en noche_detalle.html, cargar información de localStorage
 if (window.location.pathname.includes('noche_detalle')) {
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('db_ready', async () => {
         const nocheInfo = JSON.parse(localStorage.getItem('nocheActual'));
         if (nocheInfo) {
             document.getElementById('noche-titulo').textContent = `Noche ${nocheInfo.numero}`;
@@ -381,7 +368,7 @@ function actualizarTablaCarrito() {
 }
 
 // Sobrescribir evento al abrir modal para vaciar carrito (opcional) o mantenerlo
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('db_ready', () => {
     const modalCompra = document.getElementById('modalCompra');
     if (modalCompra) {
         modalCompra.addEventListener('hidden.bs.modal', () => {
