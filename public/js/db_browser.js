@@ -180,9 +180,13 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
                 
                 if (resource === '/api/clientes/registro' && config && config.method === 'POST') {
                     const body = JSON.parse(config.body);
-                    window.queryDB('INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena) VALUES (?, ?, ?, ?, ?, ?)', 
-                        [body.nombre, body.apellido, body.dni, body.direccion, body.email, body.contrasena]);
-                    return new Response(JSON.stringify({ success: true }));
+                    try {
+                        window.queryDB('INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena) VALUES (?, ?, ?, ?, ?, ?)', 
+                            [body.nombre, body.apellido, body.dni, body.direccion, body.email, body.contrasena]);
+                        return new Response(JSON.stringify({ success: true }));
+                    } catch (error) {
+                        return new Response(JSON.stringify({ success: false, message: 'El DNI o Email ya se encuentra registrado.' }));
+                    }
                 }
             }
             return originalFetch.apply(this, arguments);
