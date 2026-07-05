@@ -94,14 +94,35 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
             if (typeof resource === 'string' && resource.startsWith('/api/')) {
                 console.log('Mock fetch a:', resource);
                 
-                // Retraso artificial para simular red
                 await new Promise(r => setTimeout(r, 200));
 
                 if (resource === '/api/noches') {
                     const result = window.queryDB('SELECT * FROM NOCHE ORDER BY numero_noche ASC');
-                    return new Response(JSON.stringify({ success: true, noches: result }));
+                    return new Response(JSON.stringify({ success: true, data: result }));
                 }
                 
+                const matchGrupos = resource.match(/^\/api\/noches\/(\d+)\/grupos$/);
+                if (matchGrupos) {
+                    const id_noche = matchGrupos[1];
+                    const result = window.queryDB('SELECT g.id_grupo, g.nombre, g.horario FROM GRUPO g JOIN NOCHE_GRUPO ng ON g.id_grupo = ng.id_grupo WHERE ng.id_noche = ? ORDER BY g.horario ASC', [id_noche]);
+                    return new Response(JSON.stringify({ success: true, data: result || [] }));
+                }
+                
+                const matchEntradas = resource.match(/^\/api\/clientes\/(\d+)\/entradas$/);
+                if (matchEntradas) {
+                    const id_cliente = matchEntradas[1];
+                    const result = window.queryDB(`
+                        SELECT e.id_entrada, e.fecha_venta, e.codigoBarra, e.numero_factura, e.id_butaca as butaca,
+                               p.monto as precio_base, n.numero_noche as noche, d.porcentaje as descuento
+                        FROM ENTRADA e
+                        LEFT JOIN PRECIO p ON e.id_precio = p.id_precio
+                        LEFT JOIN NOCHE n ON p.id_noche = n.id_noche
+                        LEFT JOIN DESCUENTO d ON e.id_descuento = d.id_descuento
+                        WHERE e.id_cliente = ?
+                    `, [id_cliente]);
+                    return new Response(JSON.stringify({ success: true, data: result || [] }));
+                }
+
                 if (resource.startsWith('/api/precio')) {
                     const url = new URL(resource, window.location.origin);
                     const result = window.queryDB(
@@ -149,26 +170,11 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
                         return new Response(JSON.stringify({ success: false, message: error.message }));
                     }
                 }
-                
-                if (resource.startsWith('/api/entradas/mis-entradas')) {
-                    const usuario = JSON.parse(localStorage.getItem('usuario'));
-                    if (!usuario) return new Response(JSON.stringify({ success: false, message: 'No autenticado' }), { status: 401 });
-                    const result = window.queryDB(`
-                        SELECT e.id_entrada, e.fecha_venta, e.codigoBarra, e.numero_factura, e.id_butaca as butaca,
-                               p.monto as precio_base, n.numero_noche as noche, d.porcentaje as descuento
-                        FROM ENTRADA e
-                        LEFT JOIN PRECIO p ON e.id_precio = p.id_precio
-                        LEFT JOIN NOCHE n ON p.id_noche = n.id_noche
-                        LEFT JOIN DESCUENTO d ON e.id_descuento = d.id_descuento
-                        WHERE e.id_cliente = ?
-                    `, [usuario.id_cliente || usuario.id]);
-                    return new Response(JSON.stringify({ success: true, entradas: result || [] }));
-                }
 
-                if (resource === '/api/clientes/login' && config && config.method === 'POST') {
+                if (resource === '/api/login' && config && config.method === 'POST') {
                     const body = JSON.parse(config.body);
                     const result = window.queryDB('SELECT * FROM CLIENTE WHERE email = ? AND contrasena = ?', [body.email, body.contrasena]);
-                    if (result && result.length > 0) return new Response(JSON.stringify({ success: true, token: 'mock-token', user: result[0] }));
+                    if (result && result.length > 0) return new Response(JSON.stringify({ success: true, token: 'mock-token', data: result[0] }));
                     return new Response(JSON.stringify({ success: false, message: 'Credenciales inválidas' }));
                 }
                 
