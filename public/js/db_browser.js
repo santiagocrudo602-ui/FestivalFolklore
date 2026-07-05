@@ -88,6 +88,101 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
             }
         };
 
+        // --- INTERCEPTOR DE FETCH PARA GITHUB PAGES (MOCK API) ---
+        const originalFetch = window.fetch;
+        window.fetch = async function(resource, config) {
+            if (typeof resource === 'string' && resource.startsWith('/api/')) {
+                console.log('Mock fetch a:', resource);
+                
+                // Retraso artificial para simular red
+                await new Promise(r => setTimeout(r, 200));
+
+                if (resource === '/api/noches') {
+                    const result = window.queryDB('SELECT * FROM NOCHE ORDER BY numero_noche ASC');
+                    return new Response(JSON.stringify({ success: true, noches: result }));
+                }
+                
+                if (resource.startsWith('/api/precio')) {
+                    const url = new URL(resource, window.location.origin);
+                    const result = window.queryDB(
+                        'SELECT monto FROM PRECIO WHERE id_noche = ? AND id_sector = ? AND id_tipo = ? LIMIT 1', 
+                        [url.searchParams.get('nocheId'), url.searchParams.get('sectorId'), url.searchParams.get('publicoId')]
+                    );
+                    if (result && result.length > 0) return new Response(JSON.stringify({ success: true, precio: result[0].monto }));
+                    return new Response(JSON.stringify({ success: false, message: 'Precio no encontrado' }));
+                }
+                
+                if (resource.startsWith('/api/entradas/ocupadas')) {
+                    const url = new URL(resource, window.location.origin);
+                    const result = window.queryDB(
+                        'SELECT e.id_butaca FROM ENTRADA e JOIN PRECIO p ON e.id_precio = p.id_precio WHERE p.id_noche = ? AND p.id_sector = ?',
+                        [url.searchParams.get('nocheId'), url.searchParams.get('sectorId')]
+                    );
+                    return new Response(JSON.stringify({ success: true, ocupadas: result ? result.map(r => r.id_butaca) : [] }));
+                }
+                
+                if (resource === '/api/entradas/comprar' && config && config.method === 'POST') {
+                    try {
+                        const body = JSON.parse(config.body);
+                        const hoy = new Date().toISOString().split('T')[0];
+                        let id_descuento = null;
+                        const resultDesc = window.queryDB('SELECT id_descuento FROM DESCUENTO WHERE fecha_limite >= ? ORDER BY porcentaje DESC LIMIT 1', [hoy]);
+                        if (resultDesc && resultDesc.length > 0) id_descuento = resultDesc[0].id_descuento;
+                        
+                        const codigosGenerados = [];
+                        let butacaIndex = 0;
+                        for (const item of body.cartItems) {
+                            let id_precio = 1;
+                            const resPrecio = window.queryDB('SELECT id_precio FROM PRECIO WHERE id_noche = ? AND id_tipo = ? AND id_sector = ? LIMIT 1', [item.nocheId, item.publicoId, item.sectorId]);
+                            if (resPrecio && resPrecio.length > 0) id_precio = resPrecio[0].id_precio;
+                            
+                            for (let i = 0; i < item.cantidad; i++) {
+                                const codigoBarra = `FEST-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+                                const numero_factura = `FAC-0001-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+                                window.queryDB(`INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_descuento, id_tipo, id_punto, id_cliente, id_butaca, numero_factura) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                                    [hoy, codigoBarra, id_precio, id_descuento, item.publicoId, 1, body.id_cliente, body.butacasIds[butacaIndex++], numero_factura]);
+                                codigosGenerados.push({ codigoBarra, numero_factura });
+                            }
+                        }
+                        return new Response(JSON.stringify({ success: true, codigos: codigosGenerados }));
+                    } catch (error) {
+                        return new Response(JSON.stringify({ success: false, message: error.message }));
+                    }
+                }
+                
+                if (resource.startsWith('/api/entradas/mis-entradas')) {
+                    const usuario = JSON.parse(localStorage.getItem('usuario'));
+                    if (!usuario) return new Response(JSON.stringify({ success: false, message: 'No autenticado' }), { status: 401 });
+                    const result = window.queryDB(`
+                        SELECT e.id_entrada, e.fecha_venta, e.codigoBarra, e.numero_factura, e.id_butaca as butaca,
+                               p.monto as precio_base, n.numero_noche as noche, d.porcentaje as descuento
+                        FROM ENTRADA e
+                        LEFT JOIN PRECIO p ON e.id_precio = p.id_precio
+                        LEFT JOIN NOCHE n ON p.id_noche = n.id_noche
+                        LEFT JOIN DESCUENTO d ON e.id_descuento = d.id_descuento
+                        WHERE e.id_cliente = ?
+                    `, [usuario.id_cliente || usuario.id]);
+                    return new Response(JSON.stringify({ success: true, entradas: result || [] }));
+                }
+
+                if (resource === '/api/clientes/login' && config && config.method === 'POST') {
+                    const body = JSON.parse(config.body);
+                    const result = window.queryDB('SELECT * FROM CLIENTE WHERE email = ? AND contrasena = ?', [body.email, body.contrasena]);
+                    if (result && result.length > 0) return new Response(JSON.stringify({ success: true, token: 'mock-token', user: result[0] }));
+                    return new Response(JSON.stringify({ success: false, message: 'Credenciales inválidas' }));
+                }
+                
+                if (resource === '/api/clientes/registro' && config && config.method === 'POST') {
+                    const body = JSON.parse(config.body);
+                    window.queryDB('INSERT INTO CLIENTE (nombre, apellido, dni, direccion, email, contrasena) VALUES (?, ?, ?, ?, ?, ?)', 
+                        [body.nombre, body.apellido, body.dni, body.direccion, body.email, body.contrasena]);
+                    return new Response(JSON.stringify({ success: true }));
+                }
+            }
+            return originalFetch.apply(this, arguments);
+        };
+        // -----------------------------------------------------------
+
         // Disparar evento para avisar al resto de la app (main.js) que ya puede consultar
         document.dispatchEvent(new Event('db_ready'));
 
