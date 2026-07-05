@@ -1,32 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Festival Folklore - Registro</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../public/css/styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="../index.html">Festival Folkore</a>
+            <a class="navbar-brand" href="/">Festival Folkore</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="../index.html">Home</a>
+                        <a class="nav-link" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="../views/noches.html">Noches</a>
+                        <a class="nav-link" href="/noches">Noches</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#modalCompra">Entradas</a>
@@ -34,7 +31,7 @@
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="../views/registro.html">Registrar</a>
+                        <a class="nav-link active" href="/registro">Registrar</a>
                     </li>
                 </ul>
             </div>
@@ -74,7 +71,7 @@
                 <div class="form-check">
                     <input class="form-check-input bg-dark border-secondary" type="checkbox" id="gridCheck" required>
                     <label class="form-check-label text-light" for="gridCheck">
-                        Check me out
+                        Acepto los términos y condiciones
                     </label>
                 </div>
             </div>
@@ -87,8 +84,6 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
-    <script src="../public/js/db_browser.js?v=4"></script>
-    <script src="../public/js/main.js?v=4"></script>
+    <script src="/js/main.js"></script>
 </body>
 </html>

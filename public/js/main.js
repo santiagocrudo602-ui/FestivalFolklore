@@ -301,16 +301,10 @@ async function agregarAlCarrito() {
     const cant = parseInt(cantidad.value || 1);
 
     try {
-        const query = `
-            SELECT p.precio_base 
-            FROM PRECIO p 
-            WHERE p.id_noche = ${nocheId} AND p.id_sector = ${sectorId} AND p.id_tipo = ${publicoId}
-            LIMIT 1
-        `;
-        const resPrecio = window.queryDB(query);
+        const response = await fetch(`/api/precio?nocheId=${nocheId}&sectorId=${sectorId}&publicoId=${publicoId}`);
+        const result = await response.json();
         
-        if (resPrecio && resPrecio.length > 0 && resPrecio[0].values.length > 0) {
-            const precio = resPrecio[0].values[0][0];
+        if (result.success) {
             const item = {
                 id: Date.now(),
                 nocheId,
@@ -320,8 +314,8 @@ async function agregarAlCarrito() {
                 publicoTexto: publico.options[publico.selectedIndex].text,
                 sectorTexto: sector.options[sector.selectedIndex].text,
                 cantidad: cant,
-                precioUnitario: precio,
-                subtotal: precio * cant
+                precioUnitario: result.precio,
+                subtotal: result.precio * cant
             };
             
             carrito.push(item);
@@ -418,62 +412,54 @@ async function finalizarCompra() {
 
     const carritoGuardado = JSON.parse(localStorage.getItem('configCompraCarrito'));
     if (!carritoGuardado || carritoGuardado.length === 0) {
+        alert('No hay un carrito de compras activo.');
+        window.location.href = '/';
+        return;
+    }
+
+    const totalCantidad = carritoGuardado.reduce((sum, item) => sum + item.cantidad, 0);
+    const seleccionadas = document.querySelectorAll('.butaca.selected');
+    
+    if (seleccionadas.length !== totalCantidad) {
+        alert(`Debes seleccionar exactamente ${totalCantidad} butaca(s) antes de finalizar.`);
+        return;
+    }
+    
+    const butacasIds = Array.from(seleccionadas).map(el => parseInt(el.getAttribute('data-id')));
+
+    // Armar el payload para el backend con el array del carrito
+    const data = {
+        id_cliente: usuario.id_cliente || usuario.id, 
+        cartItems: carritoGuardado,
+        butacasIds: butacasIds
+    };
+
     try {
-        const hoy = new Date().toISOString().split('T')[0];
-        
-        // Obtener Descuento
-        let id_descuento = null;
-        const resultDesc = window.queryDB(
-            'SELECT id_descuento FROM DESCUENTO WHERE fecha_limite >= ? ORDER BY porcentaje DESC LIMIT 1',
-            [hoy]
-        );
-        if (resultDesc && resultDesc.length > 0 && resultDesc[0].values.length > 0) {
-            id_descuento = resultDesc[0].values[0][0];
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/entradas/comprar', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            const codigosStr = result.codigos.map(c => 
+                typeof c === 'object' ? `Entrada: ${c.codigoBarra} (Factura: ${c.numero_factura})` : c
+            ).join('\n');
+            alert(`¡Entradas reservadas con éxito!\n\nCódigos Generados:\n${codigosStr}\n\nSerás redirigido a la plataforma de pago de terceros...`);
+            
+            // Limpiar config y volver al inicio
+            localStorage.removeItem('configCompraCarrito');
+            window.location.href = '/';
+        } else {
+            alert('Error en la compra: ' + result.message);
         }
-
-        const codigosGenerados = [];
-        let butacaIndex = 0;
-
-        for (const item of carrito) {
-            let id_precio = 1;
-            const resultPrecio = window.queryDB(
-                'SELECT id_precio FROM PRECIO WHERE id_noche = ? AND id_tipo = ? AND id_sector = ? LIMIT 1', 
-                [item.nocheId || 1, item.publicoId, item.sectorId]
-            );
-            if (resultPrecio && resultPrecio.length > 0 && resultPrecio[0].values.length > 0) {
-                id_precio = resultPrecio[0].values[0][0];
-            }
-
-            for (let i = 0; i < item.cantidad; i++) {
-                const hash = Math.random().toString(36).substring(2, 8).toUpperCase();
-                const codigoBarra = `FEST-2026-${hash}`;
-                
-                const hashFactura = Math.random().toString(36).substring(2, 8).toUpperCase();
-                const numero_factura = `FAC-0001-${hashFactura}`;
-
-                const id_punto = 1;
-                const id_butaca = butacasIds[butacaIndex];
-                butacaIndex++;
-                
-                window.queryDB(`
-                    INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_descuento, id_tipo, id_punto, id_cliente, id_butaca, numero_factura)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                `, [hoy, codigoBarra, id_precio, id_descuento, item.publicoId, id_punto, usuario.id_cliente || 1, id_butaca, numero_factura]);
-
-                codigosGenerados.push({ codigoBarra, numero_factura });
-            }
-        }
-
-        const codigosStr = codigosGenerados.map(c => 
-            `Entrada: ${c.codigoBarra} (Factura: ${c.numero_factura})`
-        ).join('\n');
-        
-        alert(`¡Entradas reservadas con éxito!\n\nCódigos Generados:\n${codigosStr}\n\n(Nota: La reserva es temporal debido al modo estático en GitHub Pages).`);
-        
-        localStorage.removeItem('configCompraCarrito');
-        window.location.href = '../index.html';
     } catch (error) {
         console.error('Error al comprar:', error);
-        alert('Ocurrió un error al intentar finalizar la compra: ' + error.message);
+        alert('Ocurrió un error al intentar finalizar la compra.');
     }
 }
