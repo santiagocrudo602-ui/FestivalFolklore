@@ -135,7 +135,7 @@
             carrito = JSON.parse(localStorage.getItem('configCompraCarrito'));
             if (!carrito || carrito.length === 0) {
                 alert('No hay items en el carrito.');
-                window.location.href = '/';
+                window.location.href = '../index.html';
                 return;
             }
 
