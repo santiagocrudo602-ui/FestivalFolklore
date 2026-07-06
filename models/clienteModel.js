@@ -30,7 +30,7 @@ const ClienteModel = {
         const query = `
             SELECT 
                 e.codigoBarra, 
-                e.numero_factura,
+                e.id_transaccion AS idTransaccion,
                 e.fecha_venta, 
                 n.numero_noche as noche, 
                 b.numero as butaca,

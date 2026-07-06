@@ -65,8 +65,8 @@ exports.comprarEntradas = async (req, res) => {
                     const hash = crypto.randomBytes(4).toString('hex').toUpperCase();
                     const codigoBarra = `FEST-2026-${hash}`;
                     
-                    const hashFactura = crypto.randomBytes(4).toString('hex').toUpperCase();
-                    const numero_factura = `FAC-0001-${hashFactura}`;
+                    const hashTransaccion = crypto.randomBytes(4).toString('hex').toUpperCase();
+                    const idTransaccion = `TRX-0001-${hashTransaccion}`;
 
                     const id_punto = reqPunto || 1; 
                     const id_butaca = butacasIds[butacaIndex]; 
@@ -75,7 +75,7 @@ exports.comprarEntradas = async (req, res) => {
                     const entradaData = {
                         fecha_venta: hoy,
                         codigoBarra,
-                        numero_factura,
+                        idTransaccion,
                         id_precio: parseInt(id_precio),
                         id_tipo: parseInt(item.publicoId),
                         id_punto: parseInt(id_punto),
@@ -84,7 +84,7 @@ exports.comprarEntradas = async (req, res) => {
                         id_descuento: id_descuento ? parseInt(id_descuento) : null
                     };
                     await EntradaModel.create(entradaData);
-                    codigosGenerados.push({ codigoBarra, numero_factura });
+                    codigosGenerados.push({ codigoBarra, idTransaccion });
                 }
             }
 
