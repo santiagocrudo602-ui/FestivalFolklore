@@ -443,7 +443,7 @@ redirect('/index.html');
         const result = await response.json();
         if (result.success) {
             const codigosStr = result.codigos.map(c => 
-                typeof c === 'object' ? `Entrada: ${c.codigoBarra} (Factura: ${c.numero_factura})` : c
+                typeof c === 'object' ? `Entrada: ${c.codigoBarra} (Comprobante: ${c.idTransaccion})` : c
             ).join('\n');
             alert(`¡Entradas reservadas con éxito!\n\nCódigos Generados:\n${codigosStr}\n\nSerás redirigido a la plataforma de pago de terceros...`);
             

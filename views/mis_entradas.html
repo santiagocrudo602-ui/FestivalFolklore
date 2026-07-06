@@ -34,7 +34,7 @@
                     <thead>
                         <tr>
                             <th>Entrada (Código)</th>
-                            <th>Nº Factura</th>
+                            <th>Nº Comprobante</th>
                             <th>Noche / Butaca</th>
                             <th>Monto Base</th>
                             <th>Descuento</th>
@@ -102,7 +102,7 @@
 
                             tr.innerHTML = `
                                 <td><strong class="text-info">${entrada.codigoBarra}</strong></td>
-                                <td>${entrada.numero_factura}</td>
+                                <td>${entrada.idTransaccion}</td>
                                 <td>Noche ${entrada.noche} - Butaca ${entrada.butaca}</td>
                                 <td>$${precioBase.toFixed(2)}</td>
                                 <td>${descPorcentaje > 0 ? descPorcentaje + '%' : '-'}</td>

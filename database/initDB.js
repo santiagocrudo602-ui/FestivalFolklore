@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS ENTRADA (
     id_entrada   INTEGER PRIMARY KEY AUTOINCREMENT,
     fecha_venta  DATE         NOT NULL,
     codigoBarra  VARCHAR(50)  NOT NULL UNIQUE,
-    numero_factura VARCHAR(50) NOT NULL UNIQUE,
+    id_transaccion VARCHAR(50) NOT NULL UNIQUE,
     id_precio    INT          NOT NULL,
     id_tipo      INT          NOT NULL,
     id_punto     INT          NOT NULL,

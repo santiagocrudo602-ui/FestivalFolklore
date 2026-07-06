@@ -11,7 +11,7 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
     const dbPath = isRoot ? 'database/festival.db' : '../database/festival.db';
 
     try {
-        const CURRENT_DB_VERSION = '2.2';
+        const CURRENT_DB_VERSION = '2.3';
         const storedVersion = localStorage.getItem('festival_db_version');
         
         let savedDB = null;
@@ -112,7 +112,7 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
                 if (matchEntradas) {
                     const id_cliente = matchEntradas[1];
                     const result = window.queryDB(`
-                        SELECT e.id_entrada, e.fecha_venta, e.codigoBarra, e.numero_factura, e.id_butaca as butaca,
+                        SELECT e.id_entrada, e.fecha_venta, e.codigoBarra, e.id_transaccion AS idTransaccion, e.id_butaca as butaca,
                                p.monto as precio_base, n.numero_noche as noche, d.porcentaje as descuento
                         FROM ENTRADA e
                         LEFT JOIN PRECIO p ON e.id_precio = p.id_precio
@@ -159,10 +159,10 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
                             
                             for (let i = 0; i < item.cantidad; i++) {
                                 const codigoBarra = `FEST-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-                                const numero_factura = `FAC-0001-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-                                window.queryDB(`INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_descuento, id_tipo, id_punto, id_cliente, id_butaca, numero_factura) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-                                    [hoy, codigoBarra, id_precio, id_descuento, item.publicoId, 1, body.id_cliente, body.butacasIds[butacaIndex++], numero_factura]);
-                                codigosGenerados.push({ codigoBarra, numero_factura });
+                                const idTransaccion = `TRX-0001-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+                                window.queryDB(`INSERT INTO ENTRADA (fecha_venta, codigoBarra, id_precio, id_descuento, id_tipo, id_punto, id_cliente, id_butaca, id_transaccion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                                    [hoy, codigoBarra, id_precio, id_descuento, item.publicoId, 1, body.id_cliente, body.butacasIds[butacaIndex++], idTransaccion]);
+                                codigosGenerados.push({ codigoBarra, idTransaccion });
                             }
                         }
                         return new Response(JSON.stringify({ success: true, codigos: codigosGenerados }));
