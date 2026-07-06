@@ -1,11 +1,18 @@
 console.log('Frontend script loaded successfully');
 
 // Protección de rutas global (Solo se protege /butacas)
+function redirect(path) {
+    const isGithubPages = window.location.hostname.includes('github.io');
+    const repoName = '/FestivalFolklore';
+    const basePath = isGithubPages ? repoName : '';
+    window.location.href = basePath + path;
+}
+
 const currentPath = window.location.pathname;
 const usuarioLogueado = localStorage.getItem('usuario');
 
 if (!usuarioLogueado && currentPath === '/butacas') {
-    window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
+redirect('/views/login.html');
 }
 
 document.addEventListener('db_ready', () => {
@@ -53,7 +60,7 @@ function actualizarNavbar() {
 
 function cerrarSesion() {
     localStorage.removeItem('usuario');
-    window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
+redirect('/views/login.html');
 }
 
 let tempEmail = '';
@@ -82,7 +89,7 @@ async function iniciarSesion(event) {
         } else if (result.success) {
             localStorage.setItem('usuario', JSON.stringify(result.data));
             localStorage.setItem('token', result.token);
-            window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'index.html' : '../index.html';
+redirect('/index.html');
         } else {
             alert('Error: ' + result.message);
         }
@@ -112,7 +119,7 @@ async function verificarCodigo(event) {
         if (result.success) {
             localStorage.setItem('usuario', JSON.stringify(result.data));
             localStorage.setItem('token', result.token);
-            window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'index.html' : '../index.html';
+redirect('/index.html');
         } else {
             alert('Error: ' + result.message);
         }
@@ -180,7 +187,7 @@ async function cargarNoches(container) {
 // Función para redirigir al detalle de la noche guardando info en localStorage
 function verDetalleNoche(id_noche, numero, fecha) {
     localStorage.setItem('nocheActual', JSON.stringify({ id_noche, numero, fecha }));
-    window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/noche_detalle.html' : 'noche_detalle.html';
+redirect('/views/noche_detalle.html');
 }
 
 // 3. Lógica para la vista de Detalle de Noche
@@ -241,7 +248,7 @@ async function registrarCliente(event) {
         const result = await response.json();
         if (result.success) {
             alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
-            window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
+redirect('/views/login.html');
         } else {
             alert('Error: ' + result.message);
         }
@@ -385,7 +392,7 @@ function irAButacas() {
     }
     
     localStorage.setItem('configCompraCarrito', JSON.stringify(carrito));
-    window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/butacas.html' : 'butacas.html';
+redirect('/views/butacas.html');
 }
 
 // Finalizar la compra y pedir codigos de barra al backend
@@ -393,7 +400,7 @@ async function finalizarCompra() {
     const usuarioStr = localStorage.getItem('usuario');
     if (!usuarioStr) {
         alert('Debes iniciar sesión para comprar entradas.');
-        window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'views/login.html' : 'login.html';
+redirect('/views/login.html');
         return;
     }
     const usuario = JSON.parse(usuarioStr);
@@ -401,7 +408,7 @@ async function finalizarCompra() {
     const carritoGuardado = JSON.parse(localStorage.getItem('configCompraCarrito'));
     if (!carritoGuardado || carritoGuardado.length === 0) {
         alert('No hay un carrito de compras activo.');
-        window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'index.html' : '../index.html';
+redirect('/index.html');
         return;
     }
 
@@ -442,7 +449,7 @@ async function finalizarCompra() {
             
             // Limpiar config y volver al inicio
             localStorage.removeItem('configCompraCarrito');
-            window.location.href = (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) ? 'index.html' : '../index.html';
+redirect('/index.html');
         } else {
             alert('Error en la compra: ' + result.message);
         }
