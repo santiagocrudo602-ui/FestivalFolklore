@@ -113,7 +113,7 @@ exports.verificarLogin = async (req, res) => {
         
         const { user } = entry;
         const token = jwt.sign(
-            { id_cliente: user.id_cliente, email: user.email, rol: user.rol },
+            { id_cliente: user.id_cliente, email: user.email },
             process.env.JWT_SECRET || 'supersecreto',
             { expiresIn: '2h' }
         );
