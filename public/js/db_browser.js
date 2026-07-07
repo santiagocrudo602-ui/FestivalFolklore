@@ -174,8 +174,22 @@ window.dbPromise = initSqlJs(config).then(async function(SQL) {
                 if (resource === '/api/login' && config && config.method === 'POST') {
                     const body = JSON.parse(config.body);
                     const result = window.queryDB('SELECT * FROM CLIENTE WHERE email = ? AND contrasena = ?', [body.email, body.contrasena]);
-                    if (result && result.length > 0) return new Response(JSON.stringify({ success: true, token: 'mock-token', data: result[0] }));
+                    if (result && result.length > 0) {
+                        alert("Mock 2FA (Github Pages): Tu código de verificación es 123456");
+                        return new Response(JSON.stringify({ success: true, require2FA: true, email: result[0].email }));
+                    }
                     return new Response(JSON.stringify({ success: false, message: 'Credenciales inválidas' }));
+                }
+
+                if (resource === '/api/login/verificar' && config && config.method === 'POST') {
+                    const body = JSON.parse(config.body);
+                    if (body.codigo === "123456") {
+                        const result = window.queryDB('SELECT * FROM CLIENTE WHERE email = ?', [body.email]);
+                        if (result && result.length > 0) {
+                            return new Response(JSON.stringify({ success: true, token: 'mock-token', data: result[0] }));
+                        }
+                    }
+                    return new Response(JSON.stringify({ success: false, message: 'Código de verificación incorrecto' }));
                 }
                 
                 if (resource === '/api/clientes/registro' && config && config.method === 'POST') {
