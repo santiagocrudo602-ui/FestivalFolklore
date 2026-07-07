@@ -92,8 +92,7 @@ CREATE TABLE IF NOT EXISTS CLIENTE (
     dni        VARCHAR(20)  NOT NULL UNIQUE,
     direccion  VARCHAR(200),
     email      VARCHAR(150),
-    contrasena VARCHAR(255) NOT NULL,
-    rol        VARCHAR(20) DEFAULT 'user'
+    contrasena VARCHAR(255) NOT NULL
 );
 
 -- DESCUENTO
