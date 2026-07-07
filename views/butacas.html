@@ -43,6 +43,11 @@
         .butaca.selected {
             background-color: #ff80df;
         }
+        .butaca.blocked {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
         .butaca.occupied {
             background-color: #dc3545;
             cursor: not-allowed;
@@ -181,11 +186,13 @@
                     butaca.textContent = `F${fila}-C${col}`;
                     butaca.setAttribute('data-id', b);
                     butaca.setAttribute('data-map-idx', i);
+                    butaca.setAttribute('data-noche', item.nocheId);
+                    butaca.setAttribute('data-sector', item.sectorId);
                     
                     if (ocupadas.includes(b)) {
                         butaca.classList.add('occupied');
                     } else {
-                        butaca.onclick = () => toggleButaca(butaca, i, item.cantidad);
+                        butaca.onclick = () => toggleButaca(butaca, i, item.cantidad, item.nocheId, item.sectorId);
                     }
                     
                     grid.appendChild(butaca);
@@ -198,8 +205,8 @@
             }
         });
 
-        function toggleButaca(element, mapIdx, maxPorMapa) {
-            if (element.classList.contains('occupied')) return;
+        function toggleButaca(element, mapIdx, maxPorMapa, nocheId, sectorId) {
+            if (element.classList.contains('occupied') || element.classList.contains('blocked')) return;
 
             const seleccionadasEnEsteMapa = document.querySelectorAll(`.butaca.selected[data-map-idx="${mapIdx}"]`).length;
 
@@ -209,8 +216,16 @@
                     return;
                 }
                 element.classList.add('selected');
+                const butacaId = element.getAttribute('data-id');
+                document.querySelectorAll(`.butaca[data-noche="${nocheId}"][data-sector="${sectorId}"][data-id="${butacaId}"]`).forEach(el => {
+                    if (el !== element) el.classList.add('blocked');
+                });
             } else {
                 element.classList.remove('selected');
+                const butacaId = element.getAttribute('data-id');
+                document.querySelectorAll(`.butaca[data-noche="${nocheId}"][data-sector="${sectorId}"][data-id="${butacaId}"]`).forEach(el => {
+                    if (el !== element) el.classList.remove('blocked');
+                });
             }
             
             actualizarCantidad(mapIdx, maxPorMapa);
